@@ -16,7 +16,7 @@ branches:
   release: # Release and preview versions.
     # branch:  release/6.0.0-preview-3 -- must be same as git tag without leading 'v'.
     # version: {6-0-0-preview-3}       -- taken from git tag only
-    regex: ^(release[/-]|master)
+    regex: ^(release[/-]|master|pdfsharp-extended)
     # Must not have mode set to be mainline? WTF?
     increment: None
     tag: ''
