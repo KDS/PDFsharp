@@ -4,6 +4,7 @@
 #if WPF
 using System.IO;
 #endif
+using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
 
@@ -16,6 +17,31 @@ namespace PdfSharp.Pdf.Signatures
         public DefaultSigner(X509Certificate2 Certificate)
         {
             this.Certificate = Certificate;
+        }
+
+        public byte[] GetSignedCms(Stream stream, int pdfVersion, byte[] timestampToken)
+        {
+            var range = new byte[stream.Length];
+
+            stream.Position = 0;
+            stream.Read(range, 0, range.Length);
+
+            var contentInfo = new ContentInfo(range);
+            SignedCms signedCms = new SignedCms(contentInfo, true);
+            CmsSigner signer = new CmsSigner(Certificate);
+
+            signer.UnsignedAttributes.Add(new Pkcs9SigningTime());
+
+            if (timestampToken != null)
+            {
+                AsnEncodedData timestampTokenAsnEncodedData = new AsnEncodedData(new Oid("1.2.840.113549.1.9.16.2.14"), timestampToken);
+                signer.UnsignedAttributes.Add(new CryptographicAttributeObject(new Oid("1.2.840.113549.1.9.16.2.14"), new AsnEncodedDataCollection(timestampTokenAsnEncodedData)));
+            }
+
+            signedCms.ComputeSignature(signer, false);
+            var bytes = signedCms.Encode();
+
+            return bytes;
         }
 
         public byte[] GetSignedCms(Stream stream, int pdfVersion)

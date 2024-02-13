@@ -10,6 +10,7 @@ namespace PdfSharp.Pdf.Signatures
     public interface ISigner
     {
         byte[] GetSignedCms(Stream stream, int pdfVersion);
+        byte[] GetSignedCms(Stream stream, int pdfVersion, byte[] timestampToken);
 
         string GetName();
     }

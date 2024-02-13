@@ -83,5 +83,10 @@ namespace PdfSharp.Pdf.Signatures
                 _ => throw new NotImplementedException(),
             };
         }
+
+        public Byte[] GetSignedCms(Stream stream, Int32 pdfVersion, Byte[] timestampToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
