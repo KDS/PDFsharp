@@ -28,8 +28,10 @@ namespace PdfSharp.Pdf.Signatures
             this.CertificateChain = certificateData.Item2;
         }
 
-        public byte[] GetSignedCms(Stream rangedStream, int pdfVersion)
+        public byte[] GetSignedCms(Stream rangedStream, int pdfVersion, byte[]? timestampToken = null)
         {
+            // TODO: Implement timestampToken usage, right now is being ignored
+
             rangedStream.Position = 0;
 
             CmsSignedDataGenerator signedDataGenerator = new CmsSignedDataGenerator();
@@ -82,11 +84,6 @@ namespace PdfSharp.Pdf.Signatures
                 ECC => cert.GetECDsaPrivateKey(),
                 _ => throw new NotImplementedException(),
             };
-        }
-
-        public Byte[] GetSignedCms(Stream stream, Int32 pdfVersion, Byte[] timestampToken)
-        {
-            throw new NotImplementedException();
         }
     }
 }

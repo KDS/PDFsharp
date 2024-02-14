@@ -19,7 +19,7 @@ namespace PdfSharp.Pdf.Signatures
             this.Certificate = Certificate;
         }
 
-        public byte[] GetSignedCms(Stream stream, int pdfVersion, byte[] timestampToken)
+        public byte[] GetSignedCms(Stream stream, int pdfVersion, byte[]? timestampToken = null)
         {
             var range = new byte[stream.Length];
 
@@ -37,25 +37,6 @@ namespace PdfSharp.Pdf.Signatures
                 AsnEncodedData timestampTokenAsnEncodedData = new AsnEncodedData(new Oid("1.2.840.113549.1.9.16.2.14"), timestampToken);
                 signer.UnsignedAttributes.Add(new CryptographicAttributeObject(new Oid("1.2.840.113549.1.9.16.2.14"), new AsnEncodedDataCollection(timestampTokenAsnEncodedData)));
             }
-
-            signedCms.ComputeSignature(signer, false);
-            var bytes = signedCms.Encode();
-
-            return bytes;
-        }
-
-        public byte[] GetSignedCms(Stream stream, int pdfVersion)
-        {
-            var range = new byte[stream.Length];
-
-            stream.Position = 0;
-            stream.Read(range, 0, range.Length);
-
-            var contentInfo = new ContentInfo(range);
-
-            SignedCms signedCms = new SignedCms(contentInfo, true);
-            CmsSigner signer = new CmsSigner(Certificate);
-            signer.UnsignedAttributes.Add(new Pkcs9SigningTime());
 
             signedCms.ComputeSignature(signer, true);
             var bytes = signedCms.Encode();

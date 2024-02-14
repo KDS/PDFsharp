@@ -21,7 +21,7 @@ namespace PdfSharp.Pdf.Signatures
     {
         private PdfString signatureFieldContentsPdfString;
         private PdfArray signatureFieldByteRangePdfArray;
-        private byte[] timestampToken;
+        private byte[]? timestampToken;
 
         /// <summary>
         /// Cache signature length (bytes) for each PDF version since digest length depends on digest algorithm that depends on PDF version.
@@ -56,19 +56,7 @@ namespace PdfSharp.Pdf.Signatures
                 knownSignatureLengthInBytesByPdfVersion[documentToSign.Version] = signer.GetSignedCms(new MemoryStream(new byte[] { 0 }), documentToSign.Version, timestampToken).Length;
         }
 
-        public PdfSignatureHandler(ISigner signer, PdfSignatureOptions options)
-        {
-            ArgumentNullException.ThrowIfNull(signer);
-            ArgumentNullException.ThrowIfNull(options);
-
-            if (options.PageIndex < 0)
-                throw new ArgumentOutOfRangeException($"Signature page index cannot be negative.");
-
-            this.signer = signer;
-            this.Options = options;
-        }
-
-        public PdfSignatureHandler(ISigner signer, PdfSignatureOptions options, byte[] timestampToken)
+        public PdfSignatureHandler(ISigner signer, PdfSignatureOptions options, byte[]? timestampToken = null)
         {
             if (signer is null)
                 throw new ArgumentNullException(nameof(signer));
