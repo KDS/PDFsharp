@@ -35,7 +35,7 @@ namespace PdfSharp.Pdf.Signatures
             if (timestampToken != null)
             {
                 AsnEncodedData timestampTokenAsnEncodedData = new AsnEncodedData(new Oid("1.2.840.113549.1.9.16.2.14"), timestampToken);
-                signer.UnsignedAttributes.Add(new CryptographicAttributeObject(new Oid("1.2.840.113549.1.9.16.2.14"), new AsnEncodedDataCollection(timestampTokenAsnEncodedData)));
+                signer.SignedAttributes.Add(new CryptographicAttributeObject(new Oid("1.2.840.113549.1.9.16.2.14"), new AsnEncodedDataCollection(timestampTokenAsnEncodedData)));
             }
 
             signedCms.ComputeSignature(signer, true);
