@@ -21,6 +21,7 @@ namespace PdfSharp.Pdf.Signatures
     {
         private PdfString signatureFieldContentsPdfString;
         private PdfArray signatureFieldByteRangePdfArray;
+        private byte[]? timestampToken;
 
         /// <summary>
         /// Cache signature length (bytes) for each PDF version since digest length depends on digest algorithm that depends on PDF version.
@@ -52,19 +53,22 @@ namespace PdfSharp.Pdf.Signatures
 
             // estimate signature length by computing signature for a fake byte[]
             if (!knownSignatureLengthInBytesByPdfVersion.ContainsKey(documentToSign.Version))
-                knownSignatureLengthInBytesByPdfVersion[documentToSign.Version] = signer.GetSignedCms(new MemoryStream(new byte[] { 0 }), documentToSign.Version).Length;
+                knownSignatureLengthInBytesByPdfVersion[documentToSign.Version] = signer.GetSignedCms(new MemoryStream(new byte[] { 0 }), documentToSign.Version, timestampToken).Length;
         }
 
-        public PdfSignatureHandler(ISigner signer, PdfSignatureOptions options)
+        public PdfSignatureHandler(ISigner signer, PdfSignatureOptions options, byte[]? timestampToken = null)
         {
-            ArgumentNullException.ThrowIfNull(signer);
-            ArgumentNullException.ThrowIfNull(options);
+            if (signer is null)
+                throw new ArgumentNullException(nameof(signer));
+            if (options is null)
+                throw new ArgumentNullException(nameof(options));
 
             if (options.PageIndex < 0)
                 throw new ArgumentOutOfRangeException($"Signature page index cannot be negative.");
 
             this.signer = signer;
             this.Options = options;
+            this.timestampToken = timestampToken;
         }
 
         private void ComputeSignatureAndRange(object sender, PdfDocumentEventArgs e)
@@ -84,7 +88,7 @@ namespace PdfSharp.Pdf.Signatures
 
             // computing and writing document's digest
 
-            var signature = signer.GetSignedCms(rangedStreamToSign, Document.Version);
+            var signature = signer.GetSignedCms(rangedStreamToSign, Document.Version, timestampToken);
 
             if (signature.Length != knownSignatureLengthInBytesByPdfVersion[Document.Version])
                 throw new Exception("The digest length is different that the approximation made.");
