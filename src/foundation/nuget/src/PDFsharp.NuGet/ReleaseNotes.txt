@@ -4,3 +4,20 @@ The packages ’PDFsharp-gdi’ and ’PDFsharp-wpf’ can be used under Windows
 We also publish packages that contain PDFsharp plus MigraDoc.
 See the project docs site for further information:
 https://docs.pdfsharp.net/link/readme-v6.1.html
+
+
+
+PDFsharp-extended:
+
+v1.2.0
+* Synchronized with PdfSharp 6.1.0 (including natively multi-targeting netstandard/fx/net6)
+* Ability to timestamp digital signatures with TSA (only on net6+)
+v1.1.1
+* Fix issue #80 (allow detection of JPEG APP2 ICC_PROFILE headers)
+v1.1.0
+* Merged PR#2 (ability to define on which page the signature is attached)
+v1.0.2
+* Workaround for issue #69 (rendering special chars as unknown char instead of just crashing. proper support/fix is still to be done)
+* Fix issue #71 (multiple PdfFileSpecification referencing the same PdfEmbeddedFileStream is now handled without crash)
+v1.0.1
+* Fixed issue #61 (XImage.PointHeight returning width)

@@ -27,8 +27,8 @@
     <Product>PDFsharp</Product>
     <Company>empira Software</Company>
     <Copyright>© 2024 empira</Copyright>
-    <Authors>PDFsharp Team</Authors>
-    <Owners>empira Software GmbH</Owners>
+    <Authors>PDFsharp Team, KDS-NTG</Authors>
+    <Owners>KDS-NTG</Owners>
   </PropertyGroup>
 
   <PropertyGroup>
