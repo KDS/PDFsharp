@@ -15,7 +15,7 @@ namespace PdfSharp
         /// <summary>
         /// The title of the product.
         /// </summary>
-        public const string Title = "PDFsharp";
+        public const string Title = "PDFsharp-extended";
 
         /// <summary>
         /// A characteristic description of the product.
