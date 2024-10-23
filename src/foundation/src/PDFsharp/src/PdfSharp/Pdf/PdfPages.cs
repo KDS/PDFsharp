@@ -79,7 +79,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public PdfPage Add()
         {
-            var page = new PdfPage();
+            var page = new PdfPage(Owner);
             Insert(Count, page);
             return page;
         }
@@ -98,7 +98,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public PdfPage Insert(int index)
         {
-            var page = new PdfPage();
+            var page = new PdfPage(Owner);
             Insert(index, page);
             return page;
         }

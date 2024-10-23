@@ -89,7 +89,7 @@ namespace PdfSharp.Snippets.Pdf
 
             BeginBox(gfx, 5, BoxOptions.Box);
             {
-                var rsa = new PdfRubberStampAnnotation { Icon = PdfRubberStampAnnotationIcon.Approved, Flags = PdfAnnotationFlags.ReadOnly };
+                var rsa = new PdfRubberStampAnnotation(page.Owner) { Icon = PdfRubberStampAnnotationIcon.Approved, Flags = PdfAnnotationFlags.ReadOnly };
 
                 var rect = gfx.Transformer.WorldToDefaultPage(new XRect(new XPoint(20, 20), new XSize(160, 50)));
                 rsa.Rectangle = new PdfRectangle(rect);
@@ -101,7 +101,7 @@ namespace PdfSharp.Snippets.Pdf
 
             BeginBox(gfx, 6, BoxOptions.Box);
             {
-                var rsa = new PdfRubberStampAnnotation
+                var rsa = new PdfRubberStampAnnotation(page.Owner)
                           {
                               Icon = PdfRubberStampAnnotationIcon.TopSecret,
                               Flags = PdfAnnotationFlags.ReadOnly,
@@ -123,8 +123,8 @@ namespace PdfSharp.Snippets.Pdf
             BeginBox(gfx, 7, BoxOptions.Fill);
             {
                 // Create a PDF text annotation
-                var textAnnot = new PdfTextAnnotation
-                                {
+                var textAnnot = new PdfTextAnnotation(page.Owner)
+                {
                                     Title = "This is the title",
                                     Subject = "This is the subject",
                                     Contents = "This is the contents of the annotation.\rThis is the 2nd line.",
@@ -146,8 +146,8 @@ namespace PdfSharp.Snippets.Pdf
             BeginBox(gfx, 8, BoxOptions.Fill);
             {
                 // Create another PDF text annotation which is open and transparent
-                var textAnnot = new PdfTextAnnotation
-                                {
+                var textAnnot = new PdfTextAnnotation(page.Owner)
+                {
                                     Title = "Annotation 2 (title)",
                                     Subject = "Annotation 2 (subject)",
                                     Contents = "This is the contents of the 2nd annotation.",

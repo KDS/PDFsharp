@@ -8,11 +8,9 @@ namespace PdfSharp.Pdf.Security
     /// </summary>
     public abstract class CryptFilterBase : PdfDictionary
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CryptFilterBase"/> class.
-        /// </summary>
-        protected CryptFilterBase()
-        { }
+        public CryptFilterBase(PdfDocument document) : base(document)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptFilterBase"/> class.

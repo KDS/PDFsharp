@@ -18,14 +18,6 @@ namespace PdfSharp.Pdf.Structure
             SetOwner();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfLayoutAttributes"/> class.
-        /// </summary>
-        public PdfLayoutAttributes()
-        {
-            SetOwner();
-        }
-
         void SetOwner()
         {
             Elements.SetName(PdfAttributesBase.Keys.O, "/Layout");

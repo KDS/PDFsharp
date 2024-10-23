@@ -14,12 +14,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfObject"/> class.
         /// </summary>
-        protected PdfObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfObject"/> class.
-        /// </summary>
         protected PdfObject(PdfDocument document)
         {
             // Calling a virtual member in a constructor is dangerous.

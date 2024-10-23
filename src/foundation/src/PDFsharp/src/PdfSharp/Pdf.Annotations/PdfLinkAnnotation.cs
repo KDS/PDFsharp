@@ -22,15 +22,6 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfLinkAnnotation"/> class.
         /// </summary>
-        public PdfLinkAnnotation()
-        {
-            _linkType = LinkType.None;
-            Elements.SetName(PdfAnnotation.Keys.Subtype, "/Link");
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfLinkAnnotation"/> class.
-        /// </summary>
         public PdfLinkAnnotation(PdfDocument document)
             : base(document)
         {
@@ -44,12 +35,12 @@ namespace PdfSharp.Pdf.Annotations
         /// <param name="rect">The link area in default page coordinates.</param>
         /// <param name="destinationPage">The one-based destination page number.</param>
         /// <param name="point">The position in the destination page.</param>
-        public static PdfLinkAnnotation CreateDocumentLink(PdfRectangle rect, int destinationPage, XPoint? point = null)
+        public static PdfLinkAnnotation CreateDocumentLink(PdfDocument document, PdfRectangle rect, int destinationPage, XPoint? point = null)
         {
             if (destinationPage < 1)
                 throw new ArgumentException("Invalid destination page in call to CreateDocumentLink: page number is one-based and must be 1 or higher.", nameof(destinationPage));
 
-            PdfLinkAnnotation link = new PdfLinkAnnotation();
+            PdfLinkAnnotation link = new PdfLinkAnnotation(document);
             link._linkType = LinkType.Document;
             link.Rectangle = rect;
             link._destPage = destinationPage;
@@ -67,13 +58,13 @@ namespace PdfSharp.Pdf.Annotations
         /// </summary>
         /// <param name="rect">The link area in default page coordinates.</param>
         /// <param name="destinationName">The named destination’s name.</param>
-        public static PdfLinkAnnotation CreateDocumentLink(PdfRectangle rect, string destinationName)
+        public static PdfLinkAnnotation CreateDocumentLink(PdfDocument document, PdfRectangle rect, string destinationName)
         {
-            var link = new PdfLinkAnnotation
+            var link = new PdfLinkAnnotation(document)
             {
                 _linkType = LinkType.NamedDestination,
                 Rectangle = rect,
-                _action = PdfGoToAction.CreateGoToAction(destinationName)
+                _action = PdfGoToAction.CreateGoToAction(document, destinationName)
             };
             return link;
         }
@@ -88,13 +79,13 @@ namespace PdfSharp.Pdf.Annotations
         /// <param name="destinationName">The named destination’s name in the target document.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfLinkAnnotation CreateDocumentLink(PdfRectangle rect, string documentPath, string destinationName, bool? newWindow = null)
+        public static PdfLinkAnnotation CreateDocumentLink(PdfDocument document, PdfRectangle rect, string documentPath, string destinationName, bool? newWindow = null)
         {
-            var link = new PdfLinkAnnotation
+            var link = new PdfLinkAnnotation(document)
             {
                 _linkType = LinkType.NamedDestination,
                 Rectangle = rect,
-                _action = PdfRemoteGoToAction.CreateRemoteGoToAction(documentPath, destinationName, newWindow)
+                _action = PdfRemoteGoToAction.CreateRemoteGoToAction(document, documentPath, destinationName, newWindow)
             };
             return link;
         }
@@ -109,12 +100,12 @@ namespace PdfSharp.Pdf.Annotations
         /// ".." references to the parent, other strings refer to a child with this name in the EmbeddedFiles name dictionary.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfLinkAnnotation CreateEmbeddedDocumentLink(PdfRectangle rect, string destinationPath, bool? newWindow = null)
+        public static PdfLinkAnnotation CreateEmbeddedDocumentLink(PdfDocument document, PdfRectangle rect, string destinationPath, bool? newWindow = null)
         {
-            PdfLinkAnnotation link = new PdfLinkAnnotation();
+            PdfLinkAnnotation link = new PdfLinkAnnotation(document);
             link._linkType = LinkType.NamedDestination;
             link.Rectangle = rect;
-            link._action = PdfEmbeddedGoToAction.CreatePdfEmbeddedGoToAction(destinationPath, newWindow);
+            link._action = PdfEmbeddedGoToAction.CreatePdfEmbeddedGoToAction(document, destinationPath, newWindow);
             return link;
         }
 
@@ -129,21 +120,21 @@ namespace PdfSharp.Pdf.Annotations
         /// Each segment name refers to a child with this name in the EmbeddedFiles name dictionary.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfLinkAnnotation CreateEmbeddedDocumentLink(PdfRectangle rect, string documentPath, string destinationPath, bool? newWindow = null)
+        public static PdfLinkAnnotation CreateEmbeddedDocumentLink(PdfDocument document, PdfRectangle rect, string documentPath, string destinationPath, bool? newWindow = null)
         {
-            PdfLinkAnnotation link = new PdfLinkAnnotation();
+            PdfLinkAnnotation link = new PdfLinkAnnotation(document);
             link._linkType = LinkType.NamedDestination;
             link.Rectangle = rect;
-            link._action = PdfEmbeddedGoToAction.CreatePdfEmbeddedGoToAction(documentPath, destinationPath, newWindow);
+            link._action = PdfEmbeddedGoToAction.CreatePdfEmbeddedGoToAction(document, documentPath, destinationPath, newWindow);
             return link;
         }
 
         /// <summary>
         /// Creates a link to the web.
         /// </summary>
-        public static PdfLinkAnnotation CreateWebLink(PdfRectangle rect, string url)
+        public static PdfLinkAnnotation CreateWebLink(PdfDocument document, PdfRectangle rect, string url)
         {
-            var link = new PdfLinkAnnotation
+            var link = new PdfLinkAnnotation(document)
             {
                 _linkType = PdfLinkAnnotation.LinkType.Web,
                 Rectangle = rect,
@@ -155,9 +146,9 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// Creates a link to a file.
         /// </summary>
-        public static PdfLinkAnnotation CreateFileLink(PdfRectangle rect, string fileName)
+        public static PdfLinkAnnotation CreateFileLink(PdfDocument document, PdfRectangle rect, string fileName)
         {
-            var link = new PdfLinkAnnotation
+            var link = new PdfLinkAnnotation(document)
             {
                 _linkType = LinkType.File,
                 // TODO: Adjust bleed box here (if possible)

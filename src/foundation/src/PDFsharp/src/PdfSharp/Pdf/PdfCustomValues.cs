@@ -10,9 +10,6 @@ namespace PdfSharp.Pdf
     /// </summary>
     public class PdfCustomValues : PdfDictionary
     {
-        internal PdfCustomValues()
-        { }
-
         internal PdfCustomValues(PdfDocument document)
             : base(document)
         { }
@@ -113,7 +110,7 @@ namespace PdfSharp.Pdf
             var dict = elem.GetDictionary(key);
             if (dict == null)
             {
-                customValues = new PdfCustomValues();
+                customValues = new PdfCustomValues(elem.Owner.Owner);
                 elem.Owner.Owner.Internals.AddObject(customValues);
                 elem.Add(key, customValues);
             }

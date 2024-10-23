@@ -17,12 +17,6 @@ namespace PdfSharp.Pdf.Structure
         { }
 
         /// <summary>
-        /// Constructor of the abstract <see cref="PdfSharp.Pdf.Structure.PdfAttributesBase"/> class.
-        /// </summary>
-        protected PdfAttributesBase()
-        { }
-
-        /// <summary>
         /// Predefined keys of this dictionary.
         /// </summary>
         public class Keys : KeysBase

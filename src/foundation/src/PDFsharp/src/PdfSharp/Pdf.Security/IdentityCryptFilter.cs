@@ -8,7 +8,9 @@ namespace PdfSharp.Pdf.Security
     /// </summary>
     class IdentityCryptFilter : CryptFilterBase
     {
-        internal static IdentityCryptFilter Instance { get; } = new();
+        public IdentityCryptFilter(PdfDocument document) : base(document)
+        {
+        }
         
         /// <summary>
         /// Encrypts the given bytes. Returns true if the crypt filter encrypted the bytes, or false, if the security handler shall do it.

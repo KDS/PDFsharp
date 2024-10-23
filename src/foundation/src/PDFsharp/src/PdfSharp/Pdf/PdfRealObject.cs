@@ -14,21 +14,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfRealObject"/> class.
         /// </summary>
-        public PdfRealObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfRealObject"/> class.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        public PdfRealObject(double value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfRealObject"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="value">The value.</param>
         public PdfRealObject(PdfDocument document, double value)

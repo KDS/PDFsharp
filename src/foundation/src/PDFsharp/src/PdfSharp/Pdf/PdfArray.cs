@@ -52,12 +52,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfArray"/> class.
         /// </summary>
-        public PdfArray()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfArray"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         public PdfArray(PdfDocument document)
             : base(document)

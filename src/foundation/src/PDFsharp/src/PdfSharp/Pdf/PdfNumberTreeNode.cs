@@ -19,7 +19,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNumberTreeNode"/> class.
         /// </summary>
-        public PdfNumberTreeNode(bool isRoot = false)
+        public PdfNumberTreeNode(PdfDocument document, bool isRoot = false): base(document)
         {
             IsRoot = isRoot;
         }
@@ -62,7 +62,7 @@ namespace PdfSharp.Pdf
             var kids = Elements.GetArray(Keys.Kids);
             if (kids == null)
             {
-                kids = new PdfArray();
+                kids = new PdfArray(Owner);
                 Elements.SetObject(Keys.Kids, kids);
             }
             kids.Elements.Add(kidNode);
@@ -77,7 +77,7 @@ namespace PdfSharp.Pdf
             var nums = Elements.GetArray(Keys.Nums);
             if (nums == null)
             {
-                nums = new PdfArray();
+                nums = new PdfArray(Owner);
                 Elements.SetObject(Keys.Nums, nums);
             }
             nums.Elements.Add(new PdfInteger(key));

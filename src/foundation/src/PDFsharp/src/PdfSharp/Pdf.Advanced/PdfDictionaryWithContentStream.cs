@@ -21,12 +21,6 @@ namespace PdfSharp.Pdf.Advanced
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfDictionaryWithContentStream"/> class.
         /// </summary>
-        protected PdfDictionaryWithContentStream()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfDictionaryWithContentStream"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         protected PdfDictionaryWithContentStream(PdfDocument document)
             : base(document)

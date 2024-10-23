@@ -163,7 +163,7 @@ namespace PdfSharp.Pdf.IO
                         // The object ID was already found, but the object was not read yet.
                         // We ignore the object in the object stream and return a dummy object.
                         // Better: Do not call this method in the first place.
-                        var dummy = new PdfArray
+                        var dummy = new PdfArray(_document)
                         {
                             Reference = iref
                         };

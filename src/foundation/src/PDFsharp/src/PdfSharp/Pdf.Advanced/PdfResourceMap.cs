@@ -10,9 +10,6 @@ namespace PdfSharp.Pdf.Advanced
     /// </summary>
     class PdfResourceMap : PdfDictionary //, IEnumerable
     {
-        public PdfResourceMap()
-        { }
-
         public PdfResourceMap(PdfDocument document)
             : base(document)
         { }

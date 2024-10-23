@@ -120,7 +120,7 @@ namespace PdfSharp.Pdf.Signatures
             SizeType secondRangeOffset = _placeholderItem.EndPosition;
             SizeType secondRangeLength = stream.Length - _placeholderItem.EndPosition;
 
-            var byteRangeArray = new PdfArray();
+            var byteRangeArray = new PdfArray(Document);
             byteRangeArray.Elements.Add(new PdfLongInteger(firstRangeOffset));
             byteRangeArray.Elements.Add(new PdfLongInteger(firstRangeLength));
             byteRangeArray.Elements.Add(new PdfLongInteger(secondRangeOffset));
@@ -174,7 +174,7 @@ namespace PdfSharp.Pdf.Signatures
             }
 
             if (catalog.AcroForm.Elements.GetValue(PdfAcroForm.Keys.Fields) == null)
-                catalog.AcroForm.Elements.SetValue(PdfAcroForm.Keys.Fields, new PdfAcroField.PdfAcroFieldCollection(new PdfArray()));
+                catalog.AcroForm.Elements.SetValue(PdfAcroForm.Keys.Fields, new PdfAcroField.PdfAcroFieldCollection(new PdfArray(catalog.AcroForm.Elements.Owner.Owner)));
             catalog.AcroForm.Fields.Elements.Add(signatureField);
         }
 
@@ -188,7 +188,7 @@ namespace PdfSharp.Pdf.Signatures
             signatureField.Elements.Add(PdfAcroField.Keys.FT, new PdfName("/Sig"));
             signatureField.Elements.Add(PdfAcroField.Keys.T, new PdfString("Signature1")); // TODO If already exists, will it cause error? implement a name chooser if yes.
             signatureField.Elements.Add(PdfAcroField.Keys.Ff, new PdfInteger(132));
-            signatureField.Elements.Add(PdfAcroField.Keys.DR, new PdfDictionary());
+            signatureField.Elements.Add(PdfAcroField.Keys.DR, new PdfDictionary(signatureDic.Owner));
             signatureField.Elements.Add(PdfSignatureField.Keys.Type, new PdfName("/Annot"));
             signatureField.Elements.Add("/Subtype", new PdfName("/Widget"));
             signatureField.Elements.Add("/P", Document.Pages[Options.PageIndex]);

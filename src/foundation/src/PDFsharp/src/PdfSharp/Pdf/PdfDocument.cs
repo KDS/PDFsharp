@@ -40,7 +40,7 @@ namespace PdfSharp.Pdf
         /// Creates a new PDF document in memory.
         /// To open an existing PDF file, use the PdfReader class.
         /// </summary>
-        public PdfDocument()
+        public PdfDocument(): base(null!)
         {
             PdfSharpLogHost.Logger.PdfDocumentCreated(Name);
             //PdfDocument.Gob.AttachDocument(Handle);
@@ -69,7 +69,7 @@ namespace PdfSharp.Pdf
         /// Do not call Save for documents created with this constructor, just call Close.
         /// To open an existing PDF file, use the PdfReader class.
         /// </summary>
-        public PdfDocument(Stream outputStream)
+        public PdfDocument(Stream outputStream): base(null!)
         {
             _document = this;
             _creation = DateTime.Now;
@@ -81,7 +81,7 @@ namespace PdfSharp.Pdf
             OutStream = outputStream;
         }
 
-        internal PdfDocument(Lexer lexer)
+        internal PdfDocument(Lexer lexer): base(null!)
         {
             //PdfDocument.Gob.AttachDocument(Handle);
 
@@ -426,7 +426,7 @@ namespace PdfSharp.Pdf
             if (_uaManager == null)
             {
                 // Marked must be true in MarkInfo.
-                var markInfo = new PdfMarkInformation();
+                var markInfo = new PdfMarkInformation(Owner);
                 //internals.AddObject(markInfo);
 
                 markInfo.Elements.SetBoolean(PdfMarkInformation.Keys.Marked, true);

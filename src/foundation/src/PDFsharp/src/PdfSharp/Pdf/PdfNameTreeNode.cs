@@ -16,13 +16,13 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNameTreeNode"/> class.
         /// </summary>
-        public PdfNameTreeNode()
+        public PdfNameTreeNode(PdfDocument document) : base(document)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNameTreeNode"/> class.
         /// </summary>
-        public PdfNameTreeNode(bool isRoot)  //??? 
+        public PdfNameTreeNode(PdfDocument document, bool isRoot) : base(document)  //??? 
         {
             IsRoot = isRoot;
         }
@@ -71,7 +71,7 @@ namespace PdfSharp.Pdf
             var kids = Elements.GetArray(Keys.Kids);
             if (kids == null)
             {
-                kids = new PdfArray();
+                kids = new PdfArray(Owner);
                 Elements.SetObject(Keys.Kids, kids);
             }
             kids.Elements.Add(kidNode);
@@ -86,7 +86,7 @@ namespace PdfSharp.Pdf
             var names = Elements.GetArray(Keys.Names);
             if (names == null)
             {
-                names = new PdfArray();
+                names = new PdfArray(Owner);
                 Elements.SetObject(Keys.Names, names);
             }
 

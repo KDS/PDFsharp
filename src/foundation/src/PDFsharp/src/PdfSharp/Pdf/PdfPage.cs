@@ -17,18 +17,6 @@ namespace PdfSharp.Pdf
     public sealed class PdfPage : PdfDictionary, IContentStream
     {
         /// <summary>
-        /// Initializes a new page. The page must be added to a document before it can be used.
-        /// Depending on the IsMetric property of the current region the page size is set to 
-        /// A4 or Letter respectively. If this size is not appropriate it should be changed before
-        /// any drawing operations are performed on the page.
-        /// </summary>
-        public PdfPage()
-        {
-            Elements.SetName(Keys.Type, "/Page");
-            Initialize();
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="PdfPage"/> class.
         /// </summary>
         /// <param name="document">The document.</param>
@@ -538,7 +526,7 @@ namespace PdfSharp.Pdf
         /// <param name="point">The position in the destination page.</param>
         public PdfLinkAnnotation AddDocumentLink(PdfRectangle rect, int destinationPage, XPoint? point = null)
         {
-            var annotation = PdfLinkAnnotation.CreateDocumentLink(rect, destinationPage, point);
+            var annotation = PdfLinkAnnotation.CreateDocumentLink(Owner, rect, destinationPage, point);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -550,7 +538,7 @@ namespace PdfSharp.Pdf
         /// <param name="destinationName">The Named Destination’s name.</param>
         public PdfLinkAnnotation AddDocumentLink(PdfRectangle rect, string destinationName)
         {
-            var annotation = PdfLinkAnnotation.CreateDocumentLink(rect, destinationName);
+            var annotation = PdfLinkAnnotation.CreateDocumentLink(Owner, rect, destinationName);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -564,7 +552,7 @@ namespace PdfSharp.Pdf
         /// <param name="newWindow">True, if the destination document shall be opened in a new window. If not set, the viewer application should behave in accordance with the current user preference.</param>
         public PdfLinkAnnotation AddDocumentLink(PdfRectangle rect, string documentPath, string destinationName, bool? newWindow = null)
         {
-            var annotation = PdfLinkAnnotation.CreateDocumentLink(rect, documentPath, destinationName, newWindow);
+            var annotation = PdfLinkAnnotation.CreateDocumentLink(Owner, rect, documentPath, destinationName, newWindow);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -581,7 +569,7 @@ namespace PdfSharp.Pdf
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
         public PdfLinkAnnotation AddEmbeddedDocumentLink(PdfRectangle rect, string destinationPath, bool? newWindow = null)
         {
-            var annotation = PdfLinkAnnotation.CreateEmbeddedDocumentLink(rect, destinationPath, newWindow);
+            var annotation = PdfLinkAnnotation.CreateEmbeddedDocumentLink(Owner, rect, destinationPath, newWindow);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -599,7 +587,7 @@ namespace PdfSharp.Pdf
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
         public PdfLinkAnnotation AddEmbeddedDocumentLink(PdfRectangle rect, string documentPath, string destinationPath, bool? newWindow = null)
         {
-            var annotation = PdfLinkAnnotation.CreateEmbeddedDocumentLink(rect, documentPath, destinationPath, newWindow);
+            var annotation = PdfLinkAnnotation.CreateEmbeddedDocumentLink(Owner, rect, documentPath, destinationPath, newWindow);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -611,7 +599,7 @@ namespace PdfSharp.Pdf
         /// <param name="url">The URL.</param>
         public PdfLinkAnnotation AddWebLink(PdfRectangle rect, string url)
         {
-            var annotation = PdfLinkAnnotation.CreateWebLink(rect, url);
+            var annotation = PdfLinkAnnotation.CreateWebLink(Owner, rect, url);
             Annotations.Add(annotation);
             return annotation;
         }
@@ -623,7 +611,7 @@ namespace PdfSharp.Pdf
         /// <param name="fileName">Name of the file.</param>
         public PdfLinkAnnotation AddFileLink(PdfRectangle rect, string fileName)
         {
-            var annotation = PdfLinkAnnotation.CreateFileLink(rect, fileName);
+            var annotation = PdfLinkAnnotation.CreateFileLink(Owner, rect, fileName);
             Annotations.Add(annotation);
             return annotation;
         }

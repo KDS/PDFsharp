@@ -13,7 +13,7 @@ namespace PdfSharp.Pdf.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfCryptFilters"/> class.
         /// </summary>
-        public PdfCryptFilters()
+        public PdfCryptFilters(PdfDocument document) : base(document)
         { }
 
         /// <summary>

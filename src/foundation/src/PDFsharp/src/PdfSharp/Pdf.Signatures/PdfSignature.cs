@@ -11,12 +11,6 @@ namespace PdfSharp.Pdf.Signatures
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfSignature"/> class.
         /// </summary>
-        public PdfSignature()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfSignature"/> class.
-        /// </summary>
         public PdfSignature(PdfDocument dict) : base(dict)
         { }
 

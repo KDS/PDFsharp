@@ -16,12 +16,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNullObject"/> class.
         /// </summary>
-        public PdfNullObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfNullObject"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         public PdfNullObject(PdfDocument document)
             : base(document)

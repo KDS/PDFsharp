@@ -15,16 +15,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfMetadata"/> class.
         /// </summary>
-        public PdfMetadata()
-        {
-            Elements.SetName(Keys.Type, "/Metadata");
-            Elements.SetName(Keys.Subtype, "/XML");
-            SetupStream();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfMetadata"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfMetadata(PdfDocument document)
             : base(document)

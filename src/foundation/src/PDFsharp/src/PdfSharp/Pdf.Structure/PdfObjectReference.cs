@@ -11,14 +11,6 @@ namespace PdfSharp.Pdf.Structure
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfObjectReference"/> class.
         /// </summary>
-        public PdfObjectReference()
-        {
-            Elements.SetName(Keys.Type, "/OBJR");
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfObjectReference"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfObjectReference(PdfDocument document)
             : base(document)

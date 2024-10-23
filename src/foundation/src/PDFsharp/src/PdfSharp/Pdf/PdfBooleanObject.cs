@@ -15,20 +15,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfBooleanObject"/> class.
         /// </summary>
-        public PdfBooleanObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfBooleanObject"/> class.
-        /// </summary>
-        public PdfBooleanObject(bool value)
-        {
-            _value = value;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfBooleanObject"/> class.
-        /// </summary>
         public PdfBooleanObject(PdfDocument document, bool value)
             : base(document)
         {

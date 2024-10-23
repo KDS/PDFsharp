@@ -261,7 +261,7 @@ namespace PdfSharp.UniversalAccessibility
             var parentKids = parent.Elements.GetArray(PdfStructureElement.Keys.K);
             if (parentKids == null)
             {
-                parentKids = new PdfArray();
+                parentKids = new PdfArray(parent.Owner);
                 parent.Elements.SetObject(PdfStructureElement.Keys.K, parentKids);
             }
 
@@ -283,7 +283,7 @@ namespace PdfSharp.UniversalAccessibility
             // Create /K PdfArray for StructureElement, if necessary.
             if (steKids == null)
             {
-                steKids = new PdfArray();
+                steKids = new PdfArray(ste.Elements.Owner.Owner);
                 ste.Elements.SetObject(PdfStructureElement.Keys.K, steKids);
             }
 
@@ -301,7 +301,7 @@ namespace PdfSharp.UniversalAccessibility
             else
             {
                 // No. Add a MarkedContentReference that contains the Page of this Marked Content and the MCID.
-                var mcr = new PdfMarkedContentReference();
+                var mcr = new PdfMarkedContentReference(ste.Elements.Owner.Owner);
                 mcr.Elements.SetReference(PdfMarkedContentReference.Keys.Pg, UaManager.CurrentPage);
                 mcr.Elements.SetInteger(PdfMarkedContentReference.Keys.MCID, mcid);
                 steKids.Elements.Add(mcr);
@@ -327,7 +327,7 @@ namespace PdfSharp.UniversalAccessibility
             // Create /Nums PdfArray for parentTreeRoot, if necessary.
             if (parentTreeRootNums == null)
             {
-                parentTreeRootNums = new PdfArray();
+                parentTreeRootNums = new PdfArray(parentTreeRoot.Elements.Owner.Owner);
                 parentTreeRoot.Elements.SetObject(PdfNumberTreeNode.Keys.Nums, parentTreeRootNums);
             }
 
@@ -358,7 +358,7 @@ namespace PdfSharp.UniversalAccessibility
 
                 Debug.Assert(lastKey != null && lastKey.Value + 1 == structParents.Value, "The values should be continuous.");
 
-                parentTreeRoot.AddNumber(structParents.Value, new PdfArray());
+                parentTreeRoot.AddNumber(structParents.Value, new PdfArray(parentTreeRoot.Owner));
             }
 
             var structParentsMatches = parentTreeRootNums.Elements.OfType<PdfInteger>().Where(x => x.Value == structParents.Value).ToList();
@@ -392,7 +392,7 @@ namespace PdfSharp.UniversalAccessibility
             // Create /Nums PdfArray for parentTreeRoot, if necessary.
             if (parentTreeRootNums == null)
             {
-                parentTreeRootNums = new PdfArray();
+                parentTreeRootNums = new PdfArray(parentTreeRoot.Owner);
                 parentTreeRoot.Elements.SetObject(PdfNumberTreeNode.Keys.Nums, parentTreeRootNums);
             }
 
@@ -450,11 +450,11 @@ namespace PdfSharp.UniversalAccessibility
             // Create /K PdfArray for StructureElement, if necessary.
             if (steK == null)
             {
-                steK = new PdfArray();
+                steK = new PdfArray(ste.Elements.Owner.Owner);
                 ste.Elements.SetObject(PdfStructureElement.Keys.K, steK);
             }
 
-            var objr = new PdfObjectReference();
+            var objr = new PdfObjectReference(steK.Owner);
             objr.Elements.SetReference(PdfObjectReference.Keys.Obj, annotation);
             objr.Elements.SetReference(PdfObjectReference.Keys.Pg, page);
 

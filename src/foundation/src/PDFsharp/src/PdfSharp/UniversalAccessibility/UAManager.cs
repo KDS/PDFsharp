@@ -39,19 +39,19 @@ namespace PdfSharp.UniversalAccessibility
             _document.Events.PageGraphicsAction += OnPageGraphicsAction;
 
             // Marked must be true in MarkInfo.
-            var markInfo = new PdfMarkInformation();
+            var markInfo = new PdfMarkInformation(document);
             internals.AddObject(markInfo);
 
             markInfo.Elements.SetBoolean(PdfMarkInformation.Keys.Marked, true);
             internals.Catalog.Elements.SetReference(PdfCatalog.Keys.MarkInfo, markInfo);
 
             // Build Structure Tree.
-            StructureTreeRoot = new PdfStructureTreeRoot();
+            StructureTreeRoot = new PdfStructureTreeRoot(document);
             internals.AddObject(StructureTreeRoot);
             internals.Catalog.Elements.SetReference(PdfCatalog.Keys.StructTreeRoot, StructureTreeRoot);
 
             // Set parent tree root.
-            var parentTreeRoot = new PdfNumberTreeNode(true);
+            var parentTreeRoot = new PdfNumberTreeNode(_document, true);
             _document.Internals.AddObject(parentTreeRoot);
             StructureTreeRoot.Elements.SetReference(PdfStructureTreeRoot.Keys.ParentTree, parentTreeRoot);
 

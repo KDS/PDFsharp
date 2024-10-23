@@ -18,14 +18,6 @@ namespace PdfSharp.Pdf.Structure
             SetOwner();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfTableAttributes"/> class.
-        /// </summary>
-        public PdfTableAttributes()
-        {
-            SetOwner();
-        }
-
         void SetOwner()
         {
             Elements.SetName(PdfAttributesBase.Keys.O, "/Table");

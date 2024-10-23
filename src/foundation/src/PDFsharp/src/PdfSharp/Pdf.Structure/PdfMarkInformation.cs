@@ -11,12 +11,6 @@ namespace PdfSharp.Pdf.Structure
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfMarkInformation"/> class.
         /// </summary>
-        public PdfMarkInformation()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfMarkInformation"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfMarkInformation(PdfDocument document)
             : base(document)

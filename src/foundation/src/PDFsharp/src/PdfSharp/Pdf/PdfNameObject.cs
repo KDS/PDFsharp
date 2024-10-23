@@ -16,7 +16,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNameObject"/> class.
         /// </summary>
-        public PdfNameObject()
+        public PdfNameObject(PdfDocument document): base(document)
         {
             Value = "/";  // Empty name.
         }

@@ -13,11 +13,17 @@ namespace PdfSharp.Pdf.Security
     /// </summary>
     public sealed class PdfStandardSecurityHandler : PdfSecurityHandler
     {
+        private readonly IdentityCryptFilter _DefautIdentityCryptFilter;
+
         internal PdfStandardSecurityHandler(PdfDocument document) : base(document)
-        { }
+        {
+            _DefautIdentityCryptFilter = new IdentityCryptFilter(Owner);
+        }
 
         internal PdfStandardSecurityHandler(PdfDictionary dict) : base(dict)
-        { }
+        {
+            _DefautIdentityCryptFilter = new IdentityCryptFilter(Owner);
+        }
 
         void EnsureEncryptionIsSet()
         {
@@ -638,7 +644,7 @@ namespace PdfSharp.Pdf.Security
             var pdfCryptFilters = (PdfCryptFilters?)Elements.GetValue(PdfSecurityHandler.Keys.CF);
             if (pdfCryptFilters is null)
             {
-                pdfCryptFilters = new PdfCryptFilters();
+                pdfCryptFilters = new PdfCryptFilters(Owner);
                 Elements.SetObject(PdfSecurityHandler.Keys.CF, pdfCryptFilters);
             }
 
@@ -763,13 +769,13 @@ namespace PdfSharp.Pdf.Security
 
         CryptFilterBase GetDefaultCryptFilter(string cryptFilterName)
         {
-            return GetDefaultCryptFilter(cryptFilterName, IdentityCryptFilter.Instance);
+            return GetDefaultCryptFilter(cryptFilterName, _DefautIdentityCryptFilter);
         }
 
         CryptFilterBase GetDefaultCryptFilter(string cryptFilterName, CryptFilterBase @default)
         {
             if (cryptFilterName == PdfName.RemoveSlash(CryptFilterConstants.IdentityFilterValue))
-                return IdentityCryptFilter.Instance;
+                return _DefautIdentityCryptFilter;
 
             if (string.IsNullOrEmpty(cryptFilterName))
                 return @default;
@@ -844,7 +850,7 @@ namespace PdfSharp.Pdf.Security
             // The cross-reference stream shall not be encrypted. See Reference PDF 2.0: 7.5.8.2  Cross-reference stream dictionary / Page 80.
             var type = dictionary.Elements.GetName(PdfCrossReferenceStream.Keys.Type);
             if (type == "/XRef")
-                return IdentityCryptFilter.Instance;
+                return _DefautIdentityCryptFilter;
 
             // If a crypt filter is set for this PdfDictionary, try to return the desired crypt filter.
             var filters = dictionary.Elements.ArrayOrSingleItem.GetAll(PdfStream.Keys.Filter).ToList();
@@ -866,7 +872,7 @@ namespace PdfSharp.Pdf.Security
 
                         // For Identity crypt filter return its instance.
                         if (cryptFilterNameValue == CryptFilterConstants.IdentityFilterValue)
-                            return IdentityCryptFilter.Instance;
+                            return _DefautIdentityCryptFilter;
 
                         // For others try to load crypt filter form _loadedCryptFilters.
                         var cryptFilterName = PdfName.RemoveSlash(cryptFilterNameValue);
@@ -877,7 +883,7 @@ namespace PdfSharp.Pdf.Security
                 }
                 // Use IdentityCryptFilter (no encryption), if DecodeParms is not defined.
                 else
-                    return IdentityCryptFilter.Instance;
+                    return _DefautIdentityCryptFilter;
 
                 throw TH.InvalidOperationException_CryptFilterDecodeParmsNotInitializedCorrectly();
             }

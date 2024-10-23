@@ -15,7 +15,7 @@ namespace PdfSharp.Pdf.Security
         /// Initializes a new instance of the <see cref="PdfCryptFilter"/> class.
         /// </summary>
         /// <param name="parentStandardSecurityHandler">The parent standard security handler.</param>
-        public PdfCryptFilter(PdfStandardSecurityHandler? parentStandardSecurityHandler)
+        public PdfCryptFilter(PdfDocument document, PdfStandardSecurityHandler? parentStandardSecurityHandler): base(document)
         {
             Initialize(parentStandardSecurityHandler);
             _parentStandardSecurityHandler?._document.SetRequiredVersion(15);

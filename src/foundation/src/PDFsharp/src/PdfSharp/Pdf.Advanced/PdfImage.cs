@@ -677,7 +677,7 @@ namespace PdfSharp.Pdf.Advanced
                         Stream = new PdfStream(idb.DataFax, this);
                         Elements["/Length"] = new PdfInteger(idb.LengthFax);
                         Elements["/Filter"] = new PdfName("/CCITTFaxDecode");
-                        var dictionary = new PdfDictionary();
+                        var dictionary = new PdfDictionary(Owner);
                         if (idb.K != 0)
                             dictionary.Elements.Add("/K", new PdfInteger(idb.K));
                         if (idb.IsBitonal < 0)
@@ -697,9 +697,9 @@ namespace PdfSharp.Pdf.Advanced
                         Elements["/Filter"] = arrayFilters;
                         var arrayDecodeParms = new PdfArray(_document);
 
-                        var dictFlateDecodeParms = new PdfDictionary();
+                        var dictFlateDecodeParms = new PdfDictionary(Owner);
 
-                        var dictCcittFaxDecodeParms = new PdfDictionary();
+                        var dictCcittFaxDecodeParms = new PdfDictionary(Owner);
                         if (idb.K != 0)
                             dictCcittFaxDecodeParms.Elements.Add("/K", new PdfInteger(idb.K));
                         if (idb.IsBitonal < 0)
@@ -1383,7 +1383,7 @@ namespace PdfSharp.Pdf.Advanced
                         Stream = new PdfStream(imageDataFax, this);
                         Elements[PdfStream.Keys.Length] = new PdfInteger(imageDataFax.Length);
                         Elements[PdfStream.Keys.Filter] = new PdfName("/CCITTFaxDecode");
-                        var dictionary = new PdfDictionary();
+                        var dictionary = new PdfDictionary(Owner);
                         if (k != 0)
                             dictionary.Elements.Add("/K", new PdfInteger(k));
                         if (isBitonal < 0)
@@ -1407,8 +1407,8 @@ namespace PdfSharp.Pdf.Advanced
                         Elements[PdfStream.Keys.Filter] = arrayFilters;
                         var arrayDecodeParms = new PdfArray(_document);
 
-                        var dictFlateDecodeParms = new PdfDictionary();
-                        var dictCcittFaxDecodeParms = new PdfDictionary();
+                        var dictFlateDecodeParms = new PdfDictionary(Owner);
+                        var dictCcittFaxDecodeParms = new PdfDictionary(Owner);
                         if (k != 0)
                             dictCcittFaxDecodeParms.Elements.Add("/K", new PdfInteger(k));
                         if (isBitonal < 0)

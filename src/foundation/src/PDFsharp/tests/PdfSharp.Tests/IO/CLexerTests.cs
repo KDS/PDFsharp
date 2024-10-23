@@ -35,7 +35,7 @@ namespace PdfSharp.Tests.IO
             {
                 obj.WriteObject(cw);
             }
-            var newContent = new PdfContent(new PdfDictionary());
+            var newContent = new PdfContent(new PdfDictionary(new PdfDocument()));
             newContent.CreateStream(ms.ToArray());
 
             var content = newContent.Stream.ToString();
@@ -68,7 +68,7 @@ namespace PdfSharp.Tests.IO
                 cw.Close();
                 text = ms.ToArray();
             }
-            var newContent = new PdfContent(new PdfDictionary());
+            var newContent = new PdfContent(new PdfDictionary(new PdfDocument()));
             newContent.CreateStream(text);
 
             var text2 = newContent.Stream.ToString();
@@ -90,7 +90,7 @@ namespace PdfSharp.Tests.IO
             {
                 obj.WriteObject(cw);
             }
-            var newContent = new PdfContent(new PdfDictionary());
+            var newContent = new PdfContent(new PdfDictionary(new PdfDocument()));
             newContent.CreateStream(ms.ToArray());
 
             // ContentWriter adds a newline after each operator.
