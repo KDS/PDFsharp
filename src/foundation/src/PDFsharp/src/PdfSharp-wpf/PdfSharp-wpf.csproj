@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>library</OutputType>
-    <TargetFrameworks>net6.0-windows;net8.0-windows;net462</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RootNamespace>PdfSharp</RootNamespace>
     <UseWPF>true</UseWPF>
@@ -13,14 +13,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -323,14 +315,22 @@
     <Compile Include="..\PdfSharp\Pdf.Security.Encryption\PdfEncryptionV5.cs" Link="Pdf.Security.Encryption\PdfEncryptionV5.cs" />
     <Compile Include="..\PdfSharp\Pdf.Security.Encryption\RC4.cs" Link="Pdf.Security.Encryption\RC4.cs" />
     <Compile Include="..\PdfSharp\Pdf.Security.Encryption\SASLprep.cs" Link="Pdf.Security.Encryption\SASLprep.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\BouncySigner.cs" Link="Pdf.Signatures\BouncySigner.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\DefaultSignatureAppearanceHandler.cs" Link="Pdf.Signatures\DefaultSignatureAppearanceHandler.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\DefaultSignatureRenderer.cs" Link="Pdf.Signatures\DefaultSignatureRenderer.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\DefaultSigner.cs" Link="Pdf.Signatures\DefaultSigner.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\DigitalSignatureOptions.cs" Link="Pdf.Signatures\DigitalSignatureOptions.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\ISignatureRenderer.cs" Link="Pdf.Signatures\ISignatureRenderer.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\ISigner.cs" Link="Pdf.Signatures\ISigner.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfArrayWithPadding.cs" Link="Pdf.Signatures\PdfArrayWithPadding.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignature.cs" Link="Pdf.Signatures\PdfSignature.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignatureHandler.cs" Link="Pdf.Signatures\PdfSignatureHandler.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignatureOptions.cs" Link="Pdf.Signatures\PdfSignatureOptions.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignaturePlaceholderItem.cs" Link="Pdf.Signatures\PdfSignaturePlaceholderItem.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignatureValue.cs" Link="Pdf.Signatures\PdfSignatureValue.cs" />
+    <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSigner.cs" Link="Pdf.Signatures\PdfSigner.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\RangedStream.cs" Link="Pdf.Signatures\RangedStream.cs" />
-	<Compile Include="..\PdfSharp\Pdf.Structure\PdfAttributesBase.cs" Link="Pdf.Structure\PdfAttributesBase.cs" />
+	  <Compile Include="..\PdfSharp\Pdf.Structure\PdfAttributesBase.cs" Link="Pdf.Structure\PdfAttributesBase.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfLayoutAttributes.cs" Link="Pdf.Structure\PdfLayoutAttributes.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfMarkedContentReference.cs" Link="Pdf.Structure\PdfMarkedContentReference.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfMarkInformation.cs" Link="Pdf.Structure\PdfMarkInformation.cs" />

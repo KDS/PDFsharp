@@ -9,7 +9,6 @@
         <owners>$owners$</owners>
         <projectUrl>$projectUrl$</projectUrl>
         <license type="expression">MIT</license>
-        <icon>images\PDFsharp-128x128.png</icon>
         <readme>README.md</readme>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <releaseNotes>$releaseNotes$</releaseNotes>
@@ -26,10 +25,6 @@
                 <dependency id="Microsoft.Extensions.Logging" version="$Logging_PackageVersion$" />
                 <dependency id="System.Security.Cryptography.Pkcs" version="$Cryptography_PackageVersion$" />
             </group>
-            <group targetFramework="net462">
-                <dependency id="Microsoft.Extensions.Logging" version="$Logging_PackageVersion$" />
-                <dependency id="System.Security.Cryptography.Pkcs" version="$Cryptography_PackageVersion$" />
-            </group>
         </dependencies>
         <frameworkReferences>
             <group targetFramework="net6.0-windows7.0">
@@ -38,16 +33,11 @@
             <group targetFramework="net8.0-windows7.0">
                 <frameworkReference name="Microsoft.WindowsDesktop.App.WPF" />
             </group>
-            <group targetFramework="net462">
-                <!--<frameworkReference name="Microsoft.WindowsDesktop.App.WPF" />-->
-            </group>
         </frameworkReferences>
     </metadata>
     <files>
         <file src="bin\$config$\net6.0-windows\**\*.*" target="lib\net6.0-windows7.0\" exclude="**\*NuGet*"/>
         <file src="bin\$config$\net8.0-windows\**\*.*" target="lib\net8.0-windows7.0\" exclude="**\*NuGet*"/>
-        <file src="bin\$config$\net462\**\PDFsharp*.*" target="lib\net462\" exclude="**\*NuGet*"/>
         <file src="README.md" />
-        <file src="..\..\..\..\..\assets\pdfsharp\images\PDFsharp-128x128.png" target="images\" />
     </files>
 </package>

@@ -81,12 +81,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfDictionary"/> class.
         /// </summary>
-        public PdfDictionary()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfDictionary"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         public PdfDictionary(PdfDocument document)
             : base(document)
