@@ -34,6 +34,11 @@
     <!-- GitVersion used for Semantic Versioning -->
     <PackageVersion Include="GitVersion.MsBuild" Version="5.12.0" />
 
+    <!-- Signature packages -->
+    <PackageVersion Include="System.Formats.Asn1" Version="8.0.1" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="8.0.1" />
+    <PackageVersion Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <!-- Other packages -->
   </ItemGroup>
 
   <!-- ==================================================================================================== -->
@@ -128,7 +133,6 @@
     <!--<PackageVersion Include="coverlet.collector" Version="1.3.0" />-->
     <!--<PackageVersion Include="Moq" Version="4.16.1" />-->
     <!--<PackageVersion Include="NCrunch.Framework" Version="4.7.0.4" />-->
-    <!-- Other packages -->
     <!--<PackageVersion Include="Dapper" Version="2.0.123" />-->
     <!--<PackageVersion Include="System.IO.Abstractions" Version="13.2.47" />-->
     <!--<PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />-->

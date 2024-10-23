@@ -16,6 +16,40 @@ namespace PdfSharp.Pdf
     public class PdfArray : PdfObject, IEnumerable<PdfItem>
     {
         /// <summary>
+        /// Gets a value that determines whether the object was modified after loading.
+        /// </summary>
+        internal bool IsModified { get; private set; }
+
+        /// <summary>
+        /// Sets the modified-status of this object
+        /// </summary>
+        /// <param name="modified"></param>
+        internal void SetModified(bool modified)
+        {
+            if (!Owner.IsAppending || !Owner.IrefTable.FullyLoaded)
+                return;
+
+            IsModified = modified;
+            if (modified)
+            {
+                Owner.IrefTable.MarkAsModified(Reference ?? ContainingReference);
+            }
+            else
+            {
+                var iref = Reference ?? ContainingReference;
+                if (iref != null)
+                    Owner.IrefTable.ModifiedObjects.Remove(iref.ObjectID);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PdfReference"/> to the object that is the nearest indirect parent of this object<br></br>
+        /// (that is, the object that encapsulates the current object)<br></br>
+        /// This is only meaningful for direct objects embedded in other objects<br></br>
+        /// </summary>
+        internal PdfReference? ContainingReference { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PdfArray"/> class.
         /// </summary>
         public PdfArray()
@@ -381,6 +415,7 @@ namespace PdfSharp.Pdf
                     if (value == null!)
                         throw new ArgumentNullException(nameof(value));
                     _elements[index] = value;
+                    _ownerArray?.SetModified(true);
                 }
             }
 
@@ -390,6 +425,7 @@ namespace PdfSharp.Pdf
             public void RemoveAt(int index)
             {
                 _elements.RemoveAt(index);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>
@@ -397,7 +433,10 @@ namespace PdfSharp.Pdf
             /// </summary>
             public bool Remove(PdfItem item)
             {
-                return _elements.Remove(item);
+                var removed = _elements.Remove(item);
+                if (removed)
+                    _ownerArray?.SetModified(true);
+                return removed;
             }
 
             /// <summary>
@@ -406,6 +445,7 @@ namespace PdfSharp.Pdf
             public void Insert(int index, PdfItem value)
             {
                 _elements.Insert(index, value);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>
@@ -421,6 +461,8 @@ namespace PdfSharp.Pdf
             /// </summary>
             public void Clear()
             {
+                if (_elements.Count > 0)
+                    _ownerArray?.SetModified(true);
                 _elements.Clear();
             }
 
@@ -445,6 +487,7 @@ namespace PdfSharp.Pdf
                     _elements.Add(obj.Reference!);
                 else
                     _elements.Add(value);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>

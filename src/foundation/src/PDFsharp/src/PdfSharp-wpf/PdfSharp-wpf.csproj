@@ -330,7 +330,7 @@
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignatureHandler.cs" Link="Pdf.Signatures\PdfSignatureHandler.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\PdfSignaturePlaceholderItem.cs" Link="Pdf.Signatures\PdfSignaturePlaceholderItem.cs" />
     <Compile Include="..\PdfSharp\Pdf.Signatures\RangedStream.cs" Link="Pdf.Signatures\RangedStream.cs" />
-    <Compile Include="..\PdfSharp\Pdf.Structure\PdfAttributesBase.cs" Link="Pdf.Structure\PdfAttributesBase.cs" />
+	<Compile Include="..\PdfSharp\Pdf.Structure\PdfAttributesBase.cs" Link="Pdf.Structure\PdfAttributesBase.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfLayoutAttributes.cs" Link="Pdf.Structure\PdfLayoutAttributes.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfMarkedContentReference.cs" Link="Pdf.Structure\PdfMarkedContentReference.cs" />
     <Compile Include="..\PdfSharp\Pdf.Structure\PdfMarkInformation.cs" Link="Pdf.Structure\PdfMarkInformation.cs" />
@@ -431,6 +431,12 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\PdfSharp\Resources\sRGB2014.icc" Link="Resources\sRGB2014.icc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Formats.Asn1" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="BouncyCastle.Cryptography" />
   </ItemGroup>
 
 </Project>

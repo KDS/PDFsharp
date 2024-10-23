@@ -552,7 +552,8 @@ namespace PdfSharp.Pdf.IO
             WriteRaw(startxref.ToString(CultureInfo.InvariantCulture));
             WriteRaw("\n%%EOF\n");
             SizeType fileSize = (SizeType)_stream.Position;
-            if (Layout == PdfWriterLayout.Verbose)
+            // position check required for incremental updates to avoid overwriting the start of the file
+            if (Layout == PdfWriterLayout.Verbose && _commentPosition > 0)
             {
                 TimeSpan duration = DateTime.Now - document._creation;
 
