@@ -1307,7 +1307,7 @@ namespace PdfSharp.Pdf
                 if (value is PdfObject { IsIndirect: true } obj)
                     value = obj.Reference;
 
-                _elements.Add(key, value);
+                _elements[key] = value;
                 _ownerDictionary.SetModified(true);
             }
 
