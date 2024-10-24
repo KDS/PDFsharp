@@ -122,7 +122,7 @@ namespace PdfSharp.Tests.IO
                 File.Copy(sourceFile, targetFile, true);
 
                 using var fs = File.Open(targetFile, FileMode.Open, FileAccess.ReadWrite);
-                var signer = new PdfSigner(fs, options);
+                var signer = new PdfSigner(fs, options, null);
                 var resultStream = signer.Sign();
                 // overwrite input document
                 fs.Seek(0, SeekOrigin.Begin);
