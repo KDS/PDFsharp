@@ -1,3 +1,17 @@
+# This is fork of PDFSharp & MigraDoc 6.2.0 Preview 1
+The branch contains following changes:
+- All changes from PDFSharp 6.2.0 Preview 1
+- Support for multiple digital signatures https://github.com/empira/PDFsharp/pull/48
+- Support for incremental saving https://github.com/KDS/PDFsharp/pull/5
+
+## Changes applied on top of above changesets
+
+- Parameterless constructors for PDF Objects were removed to avoid issues where owner document is null for incremental saving
+- Fixes an exception: "fix System.ArgumentException : An item with the same key has already been added. Key"
+- netstandard2.0 & .NET Framework TFMs were removed
+- Added GetSize method to ISigner interface to allow pre-allocating space for digital signature
+- Updated some nuget packages to include security updates
+
 # PDFsharp & MigraDoc 6
 
 Version **6.2.0 Preview 1**  
