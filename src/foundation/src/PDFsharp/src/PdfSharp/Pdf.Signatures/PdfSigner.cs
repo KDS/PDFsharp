@@ -25,9 +25,10 @@ namespace PdfSharp.Pdf.Signatures
         /// </summary>
         /// <param name="documentStream">Stream specifying the document to sign. Must be readable and seekable</param>
         /// <param name="signatureOptions">The options that spefify, how the signing is performed</param>
+        /// <param name="signerArg"><see cref="T:ISigner"/> implementation defaults to <see cref="T:DefaultSigner"/></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentException"></exception>
-        public PdfSigner(Stream documentStream, PdfSignatureOptions signatureOptions)
+        public PdfSigner(Stream documentStream, PdfSignatureOptions signatureOptions, ISigner signerArg)
         {
             if (documentStream is null)
                 throw new ArgumentNullException(nameof(documentStream));
@@ -43,7 +44,7 @@ namespace PdfSharp.Pdf.Signatures
             inputStream = documentStream;
             // apply signature as an incremental update
             document = PdfReader.Open(documentStream, PdfDocumentOpenMode.Append);
-            signer = new DefaultSigner(signatureOptions);
+            signer = signerArg == null ? new DefaultSigner(signatureOptions) : signerArg;
         }
 
         /// <summary>
@@ -126,7 +127,7 @@ namespace PdfSharp.Pdf.Signatures
 
         private int GetContentLength()
         {
-            return signer.GetSignedCms(new MemoryStream(new byte[] { 0 }), document).Length + 10;
+            return signer.GetSize(document);
         }
 
         private PdfSignatureField GetOrCreateSignatureField(PdfSignatureValue value)

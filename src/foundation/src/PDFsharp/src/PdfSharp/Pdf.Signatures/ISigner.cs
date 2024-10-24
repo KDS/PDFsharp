@@ -13,5 +13,6 @@ namespace PdfSharp.Pdf.Signatures
         byte[] GetSignedCms(byte[] range, PdfDocument document);
 
         string? GetName();
+        int GetSize(PdfDocument document);
     }
 }

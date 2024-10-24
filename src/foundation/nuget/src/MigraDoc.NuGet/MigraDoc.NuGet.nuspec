@@ -27,18 +27,11 @@
                 <dependency id="System.Security.Cryptography.Pkcs" version="$Cryptography_PackageVersion$" />
                 <dependency id="PDFsharp" version="$version$" />
             </group>
-            <group targetFramework="netstandard2.0">
-                <dependency id="Microsoft.Extensions.Logging" version="$Logging_PackageVersion$" />
-                <dependency id="System.Security.Cryptography.Pkcs" version="$Cryptography_PackageVersion$" />
-                <dependency id="PDFsharp" version="$version$" />
-            </group>
         </dependencies>
         <frameworkReferences>
             <group targetFramework="net6.0">
             </group>
             <group targetFramework="net8.0">
-            </group>
-            <group targetFramework="netstandard2.0">
             </group>
         </frameworkReferences>
     </metadata>
