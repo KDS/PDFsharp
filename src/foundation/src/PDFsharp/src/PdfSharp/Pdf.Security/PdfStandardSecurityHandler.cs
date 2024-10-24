@@ -606,7 +606,7 @@ namespace PdfSharp.Pdf.Security
         /// </summary>
         public PdfCryptFilter CreateCryptFilter()
         {
-            return new PdfCryptFilter(this);
+            return new PdfCryptFilter(Owner, this);
         }
 
         /// <summary>

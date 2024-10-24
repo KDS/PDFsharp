@@ -55,7 +55,7 @@ namespace PdfSharp.Pdf
         /// <param name="modified"></param>
         internal void SetModified(bool modified)
         {
-            if (!Owner.IsAppending || !Owner.IrefTable.FullyLoaded)
+            if (Owner == null || !Owner.IsAppending || !Owner.IrefTable.FullyLoaded)
                 return;
 
             IsModified = modified;
