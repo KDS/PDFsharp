@@ -95,5 +95,10 @@ namespace PdfSharp.Pdf.Signatures
         {
             throw new NotImplementedException();
         }
+
+        public Int32 GetSize(PdfDocument document)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

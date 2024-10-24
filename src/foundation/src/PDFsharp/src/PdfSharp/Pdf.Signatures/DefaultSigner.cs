@@ -106,5 +106,10 @@ namespace PdfSharp.Pdf.Signatures
             newSignerInfo.AddUnsignedAttribute(new AsnEncodedData(SignatureTimeStampOin, timestampToken.AsSignedCms().Encode()));
 #endif
         }
+
+        public Int32 GetSize(PdfDocument document)
+        {
+            return this.GetSignedCms(new MemoryStream(new byte[] { 0 }), document).Length + 10;
+        }
     }
 }
