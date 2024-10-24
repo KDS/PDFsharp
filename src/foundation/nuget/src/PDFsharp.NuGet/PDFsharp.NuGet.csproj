@@ -13,7 +13,7 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NuspecFile>$(MSBuildThisFileDirectory)$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuGetId>PDFsharp</NuGetId>
+    <NuGetId>PDFsharp.DigitalSignatures.Fork</NuGetId>
     <NuGetTitle>PDFsharp for Windows and Linux</NuGetTitle>
     <NuGetDescription Condition=" '$(Configuration)'=='Debug' ">$(DebugBuildMessage)%0D$(NuGetDescription)</NuGetDescription>
     <NuGetSummary>A .NET library for processing PDF.</NuGetSummary>

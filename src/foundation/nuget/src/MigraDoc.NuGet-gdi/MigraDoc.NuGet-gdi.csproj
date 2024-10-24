@@ -13,7 +13,7 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NuspecFile>$(MSBuildThisFileDirectory)$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuGetId>PDFsharp-MigraDoc-GDI</NuGetId>
+    <NuGetId>PDFsharp-MigraDoc-GDI.DigitalSignatures.Fork</NuGetId>
     <NuGetTitle>PDFsharp plus MigraDoc for Windows Forms apps</NuGetTitle>
     <NuGetDescription Condition=" '$(Configuration)'=='Debug' ">$(DebugBuildMessage)%0D$(NuGetDescription)</NuGetDescription>
     <NuGetSummary>Creating Documents on the Fly.</NuGetSummary>
