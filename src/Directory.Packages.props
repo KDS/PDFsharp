@@ -2,16 +2,16 @@
   <!--<Import Condition="Exists('Local.Packages.props')" Project="$([MSBuild]::GetPathOfFileAbove('Local.Packages.props', '$(MSBuildThisFileDirectory)'))" />-->
   <PropertyGroup>
     <Logging_PackageVersion>8.0.0</Logging_PackageVersion>
-    <Cryptography_PackageVersion>8.0.0</Cryptography_PackageVersion>
+    <Cryptography_PackageVersion>8.0.1</Cryptography_PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
 
     <!-- Logging packages used by all PDFsharp projects -->
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(Logging_PackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(Logging_PackageVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="$(Logging_PackageVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(Logging_PackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
 
     <!-- Digital signature packages used by PdfSharp.Cryptography and for testing -->
     <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="$(Cryptography_PackageVersion)" />
@@ -36,7 +36,6 @@
 
     <!-- Signature packages -->
     <PackageVersion Include="System.Formats.Asn1" Version="8.0.1" />
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="8.0.1" />
     <PackageVersion Include="BouncyCastle.Cryptography" Version="2.4.0" />
     <!-- Other packages -->
   </ItemGroup>
