@@ -9,8 +9,7 @@ namespace PdfSharp.Pdf.Signatures
 {
     public interface ISigner
     {
-        byte[] GetSignedCms(Stream documentStream, PdfDocument document);
-        byte[] GetSignedCms(byte[] range, PdfDocument document);
+        byte[] GetSignedCms(byte[] range, PdfDocument document, long signatureBlockStart, long signatureBlockEnd);
 
         string? GetName();
         int GetSize(PdfDocument document);

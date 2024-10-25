@@ -36,8 +36,8 @@ namespace PdfSharp.Pdf.Signatures
                 throw new ArgumentException("Invalid stream. Must be readable and seekable", nameof(documentStream));
             options = signatureOptions ?? throw new ArgumentNullException(nameof(signatureOptions));
 
-            if (options.Certificate is null)
-                throw new ArgumentException("A certificate is required to sign");
+            //if (options.Certificate is null)
+            //    throw new ArgumentException("A certificate is required to sign");
             if (options.PageIndex < 0)
                 throw new ArgumentException("Page index cannot be less than zero");
 
@@ -107,7 +107,7 @@ namespace PdfSharp.Pdf.Signatures
             ms.Read(toSign, (int)contentStart, (int)(finalDocumentLength - contentEnd));
 
             // do the signing
-            var signatureData = signer.GetSignedCms(toSign, document);
+            var signatureData = signer.GetSignedCms(toSign, document, contentStart, contentEnd);
 
             // move past the '<'
             ms.Seek(contentStart + 1, SeekOrigin.Begin);

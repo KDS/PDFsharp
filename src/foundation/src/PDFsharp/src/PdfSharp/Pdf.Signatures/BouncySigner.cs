@@ -28,7 +28,7 @@ namespace PdfSharp.Pdf.Signatures
             this.CertificateChain = certificateData.Item2;
         }
 
-        public byte[] GetSignedCms(Stream rangedStream, int pdfVersion)
+        public byte[] GetSignedCms(Stream rangedStream, int pdfVersion, long signatureBlockStart, long signatureBlockEnd)
         {
             rangedStream.Position = 0;
 
@@ -86,12 +86,12 @@ namespace PdfSharp.Pdf.Signatures
             };
         }
 
-        public Byte[] GetSignedCms(Stream documentStream, PdfDocument document)
+        public Byte[] GetSignedCms(Stream documentStream, PdfDocument document, long signatureBlockStart, long signatureBlockEnd)
         {
             throw new NotImplementedException();
         }
 
-        public Byte[] GetSignedCms(Byte[] range, PdfDocument document)
+        public Byte[] GetSignedCms(Byte[] range, PdfDocument document, long signatureBlockStart, long signatureBlockEnd)
         {
             throw new NotImplementedException();
         }

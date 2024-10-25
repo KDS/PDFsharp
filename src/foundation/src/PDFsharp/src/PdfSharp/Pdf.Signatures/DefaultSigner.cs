@@ -32,16 +32,16 @@ namespace PdfSharp.Pdf.Signatures
             options = signatureOptions;
         }
 
-        public byte[] GetSignedCms(Stream documentStream, PdfDocument document)
+        public byte[] GetSignedCms(Stream documentStream, PdfDocument document, long signatureBlockStart, long signatureBlockEnd)
         {
             var range = new byte[documentStream.Length];
             documentStream.Position = 0;
             documentStream.Read(range, 0, range.Length);
 
-            return GetSignedCms(range, document);
+            return GetSignedCms(range, document, signatureBlockStart, signatureBlockEnd);
         }
 
-        public byte[] GetSignedCms(byte[] range, PdfDocument document)
+        public byte[] GetSignedCms(byte[] range, PdfDocument document, long signatureBlockStart, long signatureBlockEnd)
         {
             // Sign the byte range
             var contentInfo = new ContentInfo(range);
@@ -109,7 +109,7 @@ namespace PdfSharp.Pdf.Signatures
 
         public Int32 GetSize(PdfDocument document)
         {
-            return this.GetSignedCms(new MemoryStream(new byte[] { 0 }), document).Length + 10;
+            return this.GetSignedCms(new MemoryStream(new byte[] { 0 }), document, 0, 0).Length + 10;
         }
     }
 }
