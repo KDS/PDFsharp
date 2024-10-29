@@ -20,6 +20,9 @@ namespace PdfSharp.Pdf.Signatures
 
         private readonly PdfSignatureOptions options;
 
+        public string Filter { get; set; } = "/Adobe.PPKLite";
+        public string SubFilter { get; set; } = "/adbe.pkcs7.detached";
+
         /// <summary>
         /// Create new new instance for the specified document and with the specified options
         /// </summary>
@@ -184,8 +187,8 @@ namespace PdfSharp.Pdf.Signatures
             var contentLength = GetContentLength();
             var content = Enumerable.Repeat<byte>(0, contentLength).ToArray();
             signatureDict.Contents = content;
-            signatureDict.Filter = "/Adobe.PPKLite";
-            signatureDict.SubFilter = "/adbe.pkcs7.detached";
+            signatureDict.Filter = this.Filter;
+            signatureDict.SubFilter = this.SubFilter;
             signatureDict.SigningDate = DateTime.Now;
 
             var documentLength = inputStream.Length;
