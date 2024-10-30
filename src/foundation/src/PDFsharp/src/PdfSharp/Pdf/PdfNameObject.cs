@@ -16,7 +16,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNameObject"/> class.
         /// </summary>
-        public PdfNameObject()
+        public PdfNameObject(PdfDocument document): base(document)
         {
             Value = "/";  // Empty name.
         }
@@ -32,7 +32,7 @@ namespace PdfSharp.Pdf
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
             if (value.Length == 0 || value[0] != '/')
-                throw new ArgumentException(PSSR.NameMustStartWithSlash);
+                throw new ArgumentException(PsMsgs.NameMustStartWithSlash);
 
             Value = value;
         }

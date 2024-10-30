@@ -13,14 +13,6 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfTextAnnotation"/> class.
         /// </summary>
-        public PdfTextAnnotation()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfTextAnnotation"/> class.
-        /// </summary>
         public PdfTextAnnotation(PdfDocument document)
             : base(document)
         {

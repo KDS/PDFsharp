@@ -11,14 +11,6 @@ namespace PdfSharp.Pdf.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfAction"/> class.
         /// </summary>
-        protected PdfAction()
-        {
-            Elements.SetName(Keys.Type, "/Action");
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfAction"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         protected PdfAction(PdfDocument document)
             : base(document)

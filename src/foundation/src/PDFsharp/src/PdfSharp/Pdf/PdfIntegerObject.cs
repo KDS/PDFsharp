@@ -15,20 +15,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfIntegerObject"/> class.
         /// </summary>
-        public PdfIntegerObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfIntegerObject"/> class.
-        /// </summary>
-        public PdfIntegerObject(int value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfIntegerObject"/> class.
-        /// </summary>
         public PdfIntegerObject(PdfDocument document, int value)
             : base(document)
         {

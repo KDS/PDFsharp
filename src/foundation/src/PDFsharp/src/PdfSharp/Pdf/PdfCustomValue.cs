@@ -11,15 +11,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// This function is intended for empira internal use only.
         /// </summary>
-        public PdfCustomValue()
-        {
-            CreateStream(new byte[] { });
-        }
-
-        /// <summary>
-        /// This function is intended for empira internal use only.
-        /// </summary>
-        public PdfCustomValue(byte[] bytes)
+        public PdfCustomValue(PdfDocument document, byte[] bytes): base(document)
         {
             CreateStream(bytes);
         }
@@ -27,7 +19,7 @@ namespace PdfSharp.Pdf
         internal PdfCustomValue(PdfDocument document)
             : base(document)
         {
-            CreateStream(new byte[] { });
+            CreateStream([]);
         }
 
         internal PdfCustomValue(PdfDictionary dict)

@@ -25,15 +25,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfOutline"/> class.
         /// </summary>
-        public PdfOutline()
-        {
-            // Create _outlines on demand.
-            //_outlines = new PdfOutlineCollection(this);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfOutline"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         internal PdfOutline(PdfDocument document)
             : base(document)
@@ -59,7 +50,7 @@ namespace PdfSharp.Pdf
         /// <param name="opened">Specifies whether the node is displayed expanded (opened) or collapsed.</param>
         /// <param name="style">The font style used to draw the outline text.</param>
         /// <param name="textColor">The color used to draw the outline text.</param>
-        public PdfOutline(string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style, XColor textColor)
+        public PdfOutline(PdfDocument document, string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style, XColor textColor): this(document)
         {
             Title = title;
             DestinationPage = destinationPage;
@@ -75,7 +66,7 @@ namespace PdfSharp.Pdf
         /// <param name="destinationPage">The destination page.</param>
         /// <param name="opened">Specifies whether the node is displayed expanded (opened) or collapsed.</param>
         /// <param name="style">The font style used to draw the outline text.</param>
-        public PdfOutline(string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style)
+        public PdfOutline(PdfDocument document, string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style) : this(document)
         {
             Title = title;
             DestinationPage = destinationPage;
@@ -89,7 +80,7 @@ namespace PdfSharp.Pdf
         /// <param name="title">The outline text.</param>
         /// <param name="destinationPage">The destination page.</param>
         /// <param name="opened">Specifies whether the node is displayed expanded (opened) or collapsed.</param>
-        public PdfOutline(string title, PdfPage destinationPage, bool opened)
+        public PdfOutline(PdfDocument document, string title, PdfPage destinationPage, bool opened) : this(document)
         {
             Title = title;
             DestinationPage = destinationPage;
@@ -101,7 +92,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         /// <param name="title">The outline text.</param>
         /// <param name="destinationPage">The destination page.</param>
-        public PdfOutline(string title, PdfPage destinationPage)
+        public PdfOutline(PdfDocument document, string title, PdfPage destinationPage) : this(document)
         {
             Title = title;
             DestinationPage = destinationPage;

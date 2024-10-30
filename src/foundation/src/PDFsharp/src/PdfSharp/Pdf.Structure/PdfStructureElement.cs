@@ -10,13 +10,6 @@ namespace PdfSharp.Pdf.Structure
     /// </summary>
     public sealed class PdfStructureElement : PdfDictionary
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfStructureElement"/> class.
-        /// </summary>
-        public PdfStructureElement()
-        {
-            Elements.SetName(Keys.Type, "/StructElem");
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfStructureElement"/> class.
@@ -143,7 +136,7 @@ namespace PdfSharp.Pdf.Structure
         /// </summary>
         public PdfTableAttributes TableAttributes => GetAttributes<PdfTableAttributes>();
 
-        T GetAttributes<T>() where T : PdfAttributesBase, new()
+        T GetAttributes<T>() where T : PdfAttributesBase
         {
             var a = Elements[Keys.A];
             var array = a as PdfArray;
@@ -166,7 +159,8 @@ namespace PdfSharp.Pdf.Structure
             }
 
             // Create and add a new instance of T, if there’s no one.
-            var t = new T { Document = Owner };
+            var t = Activator.CreateInstance<T>();
+            t.Document = Owner;
             array.Elements.Add(t);
             return t;
         }

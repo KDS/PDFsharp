@@ -35,5 +35,12 @@ namespace PdfSharp.Pdf.IO
         /// </summary>
         [Obsolete("InformationOnly is not implemented, use Import instead.")]
         InformationOnly,
+
+        /// <summary>
+        /// Comparable to <see cref="Modify"/> but instead of overwriting the original document,<br></br>
+        /// changed objects are appended to the original document when saving.<br></br>
+        /// In PDF-terminology this is called an <b>Incremental Update</b>
+        /// </summary>
+        Append
     }
 }

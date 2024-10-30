@@ -19,13 +19,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfNumberTreeNode"/> class.
         /// </summary>
-        public PdfNumberTreeNode()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfNumberTreeNode"/> class.
-        /// </summary>
-        public PdfNumberTreeNode(bool isRoot)  //??? Needed HACK StLa
+        public PdfNumberTreeNode(PdfDocument document, bool isRoot = false): base(document)
         {
             IsRoot = isRoot;
         }
@@ -33,12 +27,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets a value indicating whether this instance is a root node.
         /// </summary>
-        public bool IsRoot
-        {
-            get => _isRoot;
-            private init => _isRoot = value;
-        }
-        readonly bool _isRoot;
+        public bool IsRoot { get; private init; }
 
         /// <summary>
         /// Gets the number of Kids elements.
@@ -73,7 +62,7 @@ namespace PdfSharp.Pdf
             var kids = Elements.GetArray(Keys.Kids);
             if (kids == null)
             {
-                kids = new PdfArray();
+                kids = new PdfArray(Owner);
                 Elements.SetObject(Keys.Kids, kids);
             }
             kids.Elements.Add(kidNode);
@@ -88,7 +77,7 @@ namespace PdfSharp.Pdf
             var nums = Elements.GetArray(Keys.Nums);
             if (nums == null)
             {
-                nums = new PdfArray();
+                nums = new PdfArray(Owner);
                 Elements.SetObject(Keys.Nums, nums);
             }
             nums.Elements.Add(new PdfInteger(key));
@@ -99,12 +88,12 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets the least key.
         /// </summary>
-        public string LeastKey => "todo";
+        public string LeastKey => throw new NotImplementedException(nameof(LeastKey));  // NYI
 
         /// <summary>
         /// Gets the greatest key.
         /// </summary>
-        public string GreatestKey => "todo";
+        public string GreatestKey => throw new NotImplementedException(nameof(GreatestKey));  // NYI
 
         /// <summary>
         /// Updates the limits by inspecting Kids and Names.
@@ -113,7 +102,7 @@ namespace PdfSharp.Pdf
         {
             if (_updateRequired)
             {
-                //TODO Recalc Limits
+                // NYI Recalculate Limits
                 _updateRequired = false;
             }
         }

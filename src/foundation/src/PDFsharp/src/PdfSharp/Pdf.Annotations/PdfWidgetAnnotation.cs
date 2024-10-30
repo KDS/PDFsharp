@@ -8,11 +8,6 @@ namespace PdfSharp.Pdf.Annotations
     /// </summary>
     sealed class PdfWidgetAnnotation : PdfAnnotation
     {
-        public PdfWidgetAnnotation()
-        {
-            Initialize();
-        }
-
         public PdfWidgetAnnotation(PdfDocument document)
             : base(document)
         {

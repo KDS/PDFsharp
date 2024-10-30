@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net472-windows</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RootNamespace>PdfSharp.Quality</RootNamespace>
     <UseWPF>true</UseWPF>
@@ -12,14 +12,6 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net472-windows|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net472-windows|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,6 +34,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PdfSharp.Shared\PdfSharp.Shared.csproj" />
+    <ProjectReference Include="..\PdfSharp.System\PdfSharp.System.csproj" />
     <ProjectReference Include="..\..\..\PDFsharp\src\PdfSharp-wpf\PdfSharp-wpf.csproj" />
     <ProjectReference Include="..\PdfSharp.WPFonts\PdfSharp.WPFonts.csproj" />
   </ItemGroup>

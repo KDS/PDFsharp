@@ -15,14 +15,6 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfAnnotation"/> class.
         /// </summary>
-        protected PdfAnnotation()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfAnnotation"/> class.
-        /// </summary>
         protected PdfAnnotation(PdfDocument document)
             : base(document)
         {
@@ -83,7 +75,7 @@ namespace PdfSharp.Pdf.Annotations
         /// </summary>
         public PdfRectangle Rectangle
         {
-            get => Elements.GetRectangle(Keys.Rect, true);
+            get => Elements.GetRectangle(Keys.Rect);
             set
             {
                 Elements.SetRectangle(Keys.Rect, value);

@@ -15,20 +15,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfLongIntegerObject"/> class.
         /// </summary>
-        public PdfLongIntegerObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfLongIntegerObject"/> class.
-        /// </summary>
-        public PdfLongIntegerObject(long value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfLongIntegerObject"/> class.
-        /// </summary>
         public PdfLongIntegerObject(PdfDocument document, long value)
             : base(document)
         {

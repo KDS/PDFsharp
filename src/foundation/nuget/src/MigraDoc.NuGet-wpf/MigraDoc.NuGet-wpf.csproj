@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net472-windows</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows;net8.0-windows</TargetFrameworks>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -13,7 +13,7 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NuspecFile>$(MSBuildThisFileDirectory)$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuGetId>PDFsharp-MigraDoc-WPF</NuGetId>
+    <NuGetId>PDFsharp-MigraDoc-WPF.DigitalSignatures.Fork</NuGetId>
     <NuGetTitle>PDFsharp plus MigraDoc for Windows WPF apps</NuGetTitle>
     <NuGetDescription Condition=" '$(Configuration)'=='Debug' ">$(DebugBuildMessage)%0D$(NuGetDescription)</NuGetDescription>
     <NuGetSummary>Creating Documents on the Fly.</NuGetSummary>
@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\..\src\MigraDoc\src\MigraDoc.RtfRendering-wpf\MigraDoc.RtfRendering-wpf.csproj" />
     <ProjectReference Include="..\..\..\src\PDFsharp\src\PdfSharp-wpf\PdfSharp-wpf.csproj" />
     <ProjectReference Include="..\..\..\src\PDFsharp\src\PdfSharp.Charting-wpf\PdfSharp.Charting-wpf.csproj" />
+    <ProjectReference Include="..\..\..\src\shared\src\PdfSharp.Crytography\PdfSharp.Cryptography.csproj" />
     <ProjectReference Include="..\..\..\src\shared\src\PdfSharp.Quality-wpf\PdfSharp.Quality-wpf.csproj" />
     <ProjectReference Include="..\..\..\src\shared\src\PdfSharp.Snippets-wpf\PdfSharp.Snippets-wpf.csproj" />
     <ProjectReference Include="..\..\..\src\shared\src\PdfSharp.System\PdfSharp.System.csproj" />

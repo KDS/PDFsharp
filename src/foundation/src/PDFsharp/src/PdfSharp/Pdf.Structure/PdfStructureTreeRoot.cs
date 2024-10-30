@@ -13,14 +13,6 @@ namespace PdfSharp.Pdf.Structure
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfStructureTreeRoot"/> class.
         /// </summary>
-        public PdfStructureTreeRoot()
-        {
-            Elements.SetName(Keys.Type, "/StructTreeRoot");
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfStructureTreeRoot"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfStructureTreeRoot(PdfDocument document)
             : base(document)

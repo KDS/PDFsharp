@@ -4,6 +4,7 @@
 using PdfSharp.Pdf.IO;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.Annotations;
+using PdfSharp.Pdf.Signatures;
 
 namespace PdfSharp.Pdf.AcroForms
 {
@@ -17,12 +18,20 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         internal PdfSignatureField(PdfDocument document)
             : base(document)
-        { }
+        {
+            Elements[PdfAcroField.Keys.FT] = new PdfName("/Sig");
+            CustomAppearanceHandler = null!;
+        }
 
         internal PdfSignatureField(PdfDictionary dict)
             : base(dict)
-        { }
+        {
+            CustomAppearanceHandler = null!;
+        }
 
+        /// <summary>
+        /// Handler that creates the visual representation of the digital signature in PDF.
+        /// </summary>
         public IAnnotationAppearanceHandler CustomAppearanceHandler { get; internal set; }
 
         /// <summary>
@@ -33,7 +42,7 @@ namespace PdfSharp.Pdf.AcroForms
         {
             PdfRectangle rect = Elements.GetRectangle(PdfAnnotation.Keys.Rect);
 
-            var visible = !(rect.X1 + rect.X2 + rect.Y1 + rect.Y2 == 0);
+            var visible = rect.X1 + rect.X2 + rect.Y1 + rect.Y2 != 0;
 
             if (!visible)
                 return;
@@ -58,15 +67,41 @@ namespace PdfSharp.Pdf.AcroForms
             // Set XRef to normal state
             ap.Elements["/N"] = form.PdfForm.Reference;
 
-            form.PdfRenderer.Close();
+            // PdfRenderer can be null.
+            form.PdfRenderer?.Close();
         }
 
         internal override void PrepareForSave()
         {
             base.PrepareForSave();
-            if (CustomAppearanceHandler != null)
+            if (CustomAppearanceHandler != null!)
                 RenderCustomAppearance();
         }
+
+        /// <summary>
+        /// Gets or sets the value for this field
+        /// </summary>
+        public new PdfSignatureValue? Value
+        {
+            get
+            {
+                if (sigValue is null)
+                {
+                    var dict = Elements.GetValue(PdfAcroField.Keys.V) as PdfDictionary;
+                    if (dict is not null)
+                        sigValue = new PdfSignatureValue(dict);
+                }
+                return sigValue;
+            }
+            set
+            {
+                if (value is not null)
+                    Elements.SetReference(PdfAcroField.Keys.V, value);
+                else
+                    Elements.Remove(PdfAcroField.Keys.V);
+            }
+        }
+        PdfSignatureValue? sigValue;
 
         /// <summary>
         /// Writes a key/value pair of this signature field dictionary.
@@ -87,7 +122,9 @@ namespace PdfSharp.Pdf.AcroForms
 
         /// <summary>
         /// Predefined keys of this dictionary.
-        /// The description comes from PDF 1.4 Reference.
+        /// The description comes from PDF 1.4 Reference.<br></br>
+        /// TODO: These are wrong !
+        /// The keys are for a <see cref="PdfSignatureValue"/>, not for a <see cref="PdfSignatureField"/>
         /// </summary>
         public new class Keys : PdfAcroField.Keys
         {

@@ -15,14 +15,6 @@ namespace PdfSharp.Pdf.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfEmbeddedGoToAction"/> class.
         /// </summary>
-        public PdfEmbeddedGoToAction()
-        {
-            Inititalize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfEmbeddedGoToAction"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfEmbeddedGoToAction(PdfDocument document)
             : base(document)
@@ -39,9 +31,9 @@ namespace PdfSharp.Pdf.Actions
         /// ".." references to the parent, other strings refer to a child with this name in the EmbeddedFiles name dictionary.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfEmbeddedGoToAction CreatePdfEmbeddedGoToAction(string destinationPath, bool? newWindow = null)
+        public static PdfEmbeddedGoToAction CreatePdfEmbeddedGoToAction(PdfDocument document, string destinationPath, bool? newWindow = null)
         {
-            return CreatePdfEmbeddedGoToAction(null, destinationPath, newWindow);
+            return CreatePdfEmbeddedGoToAction(document, null, destinationPath, newWindow);
         }
 
         /// <summary>
@@ -54,13 +46,13 @@ namespace PdfSharp.Pdf.Actions
         /// Each segment name refers to a child with this name in the EmbeddedFiles name dictionary.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfEmbeddedGoToAction CreatePdfEmbeddedGoToAction(string? documentPath, string destinationPath, bool? newWindow = null)
+        public static PdfEmbeddedGoToAction CreatePdfEmbeddedGoToAction(PdfDocument document, string? documentPath, string destinationPath, bool? newWindow = null)
         {
-            var action = new PdfEmbeddedGoToAction
+            var action = new PdfEmbeddedGoToAction(document)
             {
                 _documentPath = documentPath,
                 _destinationPath = destinationPath,
-                _newWindow = newWindow
+                _newWindow = newWindow,
             };
             return action;
         }
@@ -111,8 +103,8 @@ namespace PdfSharp.Pdf.Actions
             {
                 var segment = segments[i];
                 var target = segment == ParentString
-                    ? TargetDictionary.CreateTargetParent()
-                    : TargetDictionary.CreateTargetChild(segment);
+                    ? TargetDictionary.CreateTargetParent(Owner)
+                    : TargetDictionary.CreateTargetChild(Owner, segment);
 
                 currentElementsObject.SetObject(Keys.T, target);
 
@@ -127,6 +119,7 @@ namespace PdfSharp.Pdf.Actions
         /// Separator for splitting destination path segments ans destination name.
         /// </summary>
         public const char Separator = '\\';
+        
         /// <summary>
         /// Path segment string used to move to the parent document.
         /// </summary>
@@ -177,12 +170,13 @@ namespace PdfSharp.Pdf.Actions
 
         internal class TargetDictionary : PdfDictionary
         {
-            TargetDictionary()
-            { }
-
-            public static TargetDictionary CreateTargetChild(string name)
+            public TargetDictionary(PdfDocument document) : base(document)
             {
-                var target = new TargetDictionary();
+            }
+
+            public static TargetDictionary CreateTargetChild(PdfDocument document, string name)
+            {
+                var target = new TargetDictionary(document);
 
                 target.Elements.SetName(Keys.R, "/C");
                 target.Elements.SetString(Keys.N, name);
@@ -190,9 +184,9 @@ namespace PdfSharp.Pdf.Actions
                 return target;
             }
 
-            public static TargetDictionary CreateTargetParent()
+            public static TargetDictionary CreateTargetParent(PdfDocument document)
             {
-                var target = new TargetDictionary();
+                var target = new TargetDictionary(document);
 
                 target.Elements.SetName(Keys.R, "/P");
 

@@ -38,7 +38,7 @@ namespace PdfSharp.Pdf.Advanced
             XColor color1 = ColorSpaceHelper.EnsureColorMode(colorMode, brush._color1);
             XColor color2 = ColorSpaceHelper.EnsureColorMode(colorMode, brush._color2);
 
-            PdfDictionary function = new PdfDictionary();
+            PdfDictionary function = new PdfDictionary(Owner);
 
             Elements[Keys.ShadingType] = new PdfInteger(2);
             if (colorMode != PdfColorMode.Cmyk)

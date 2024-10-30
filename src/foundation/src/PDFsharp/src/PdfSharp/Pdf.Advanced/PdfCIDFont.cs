@@ -25,7 +25,7 @@ namespace PdfSharp.Pdf.Advanced
             Elements.SetName(Keys.Type, "/Font");
             Elements.SetName(Keys.Subtype, "/CIDFontType2");
             // Create CIDSystemInfo dictionary.
-            PdfDictionary cid = new();
+            PdfDictionary cid = new(Owner);
             cid.Elements.SetString("/Ordering", "Identity");
             cid.Elements.SetString("/Registry", "Adobe");
             cid.Elements.SetInteger("/Supplement", 0);
@@ -47,7 +47,7 @@ namespace PdfSharp.Pdf.Advanced
         {
             Elements.SetName(Keys.Type, "/Font");
             Elements.SetName(Keys.Subtype, "/CIDFontType2");
-            PdfDictionary cid = new();
+            PdfDictionary cid = new(Owner);
             cid.Elements.SetString("/Ordering", "Identity");
             cid.Elements.SetString("/Registry", "Adobe");
             cid.Elements.SetInteger("/Supplement", 0);

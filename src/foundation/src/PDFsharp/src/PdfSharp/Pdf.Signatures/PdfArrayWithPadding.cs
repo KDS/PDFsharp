@@ -5,42 +5,31 @@ using PdfSharp.Pdf.IO;
 
 namespace PdfSharp.Pdf.Signatures
 {
-    internal class PdfArrayWithPadding : PdfArray
+    /// <summary>
+    /// Internal PDF array used for digital signatures.
+    /// For digital signatures, we have to add an array with four integers,
+    /// but at the time we add the array we cannot yet determine
+    /// how many digits those integers will have.
+    /// </summary>
+    /// <param name="document">The document.</param>
+    /// <param name="paddingRight">The count of spaces added after the array.</param>
+    /// <param name="items">The contents of the array.</param>
+    sealed class PdfArrayWithPadding(PdfDocument document, int paddingRight, params PdfItem[] items)
+        : PdfArray(document, items)
     {
-        public int PaddingRight { get; private set; }
-
-        public PdfArrayWithPadding(PdfDocument document, int paddingRight, params PdfItem[] items) 
-            : base(document, items)
-        {
-            PaddingRight = paddingRight;
-        }
+        public int PaddingRight { get; init; } = paddingRight;
 
         internal override void WriteObject(PdfWriter writer)
         {
-            PositionStart = writer.Position;
+            StartPosition = writer.Position;
 
             base.WriteObject(writer);
-
-            if (PaddingRight > 0)
-            {
-                var bytes = new byte[PaddingRight];
-                for (int i = 0; i < PaddingRight; i++)
-                    bytes[i] = 32;// space
-
-                writer.Write(bytes);
-            }
-
-            PositionEnd = writer.Position;
+            writer.WriteRaw(new String(' ', PaddingRight));
         }
 
         /// <summary>
-        /// Position of the first byte of this string in PdfWriter's Stream
+        /// Position of the first byte of this string in PdfWriter’s stream.
         /// </summary>
-        public long PositionStart { get; internal set; }
-
-        /// <summary>
-        /// Position of the last byte of this string in PdfWriter's Stream
-        /// </summary>
-        public long PositionEnd { get; internal set; }
+        public SizeType StartPosition { get; internal set; }
     }
 }

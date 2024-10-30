@@ -10,7 +10,7 @@ namespace PdfSharp.Pdf.Advanced
     /// </summary>
     class PdfPageInheritableObjects : PdfDictionary
     {
-        public PdfPageInheritableObjects()
+        public PdfPageInheritableObjects(PdfDocument document): base(document)
         { }
 
         // TODO Inheritable Resources not yet supported

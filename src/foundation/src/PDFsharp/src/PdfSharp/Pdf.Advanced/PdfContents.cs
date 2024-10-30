@@ -49,7 +49,9 @@ namespace PdfSharp.Pdf.Advanced
         {
             Debug.Assert(Owner != null);
 
-            SetModified();
+            if (Owner._openMode != PdfDocumentOpenMode.Append)
+                SetModified();
+
             PdfContent content = new PdfContent(Owner);
             Owner.IrefTable.Add(content);
             Debug.Assert(content.Reference != null);
@@ -64,7 +66,9 @@ namespace PdfSharp.Pdf.Advanced
         {
             Debug.Assert(Owner != null);
 
-            SetModified();
+            if (Owner._openMode != PdfDocumentOpenMode.Append)
+                SetModified();
+
             PdfContent content = new PdfContent(Owner);
             Owner.IrefTable.Add(content);
             Debug.Assert(content.Reference != null);
@@ -221,7 +225,7 @@ namespace PdfSharp.Pdf.Advanced
                 get
                 {
                     if (_index == -1 || _index >= _contents.Elements.Count)
-                        throw new InvalidOperationException(PSSR.ListEnumCurrentOutOfRange);
+                        throw new InvalidOperationException(PsMsgs.ListEnumCurrentOutOfRange);
                     return _currentElement??throw new InvalidOperationException("Current called before MoveNext.");
                 }
             }

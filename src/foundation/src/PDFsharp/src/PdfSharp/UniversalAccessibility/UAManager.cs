@@ -10,7 +10,8 @@ using PdfSharp.Pdf.Structure;
 namespace PdfSharp.UniversalAccessibility
 {
     /// <summary>
-    /// This is just a scratch.
+    /// The UAManager adds PDF/UA (Accessibility) support to a PdfDocument.
+    /// By using its StructureBuilder, you can easily build up the structure tree to give hints to screen readers about how to read the document.
     /// </summary>
     // ReSharper disable once InconsistentNaming
     public class UAManager
@@ -21,7 +22,7 @@ namespace PdfSharp.UniversalAccessibility
         /// <param name="document">The PDF document.</param>
         UAManager(PdfDocument document)
         {
-            document._uaManager = this;
+            //document._uaManager = this; done in ForDocument
             _document = document;
 
             // Set default language to English.
@@ -38,19 +39,19 @@ namespace PdfSharp.UniversalAccessibility
             _document.Events.PageGraphicsAction += OnPageGraphicsAction;
 
             // Marked must be true in MarkInfo.
-            var markInfo = new PdfMarkInformation();
+            var markInfo = new PdfMarkInformation(document);
             internals.AddObject(markInfo);
 
             markInfo.Elements.SetBoolean(PdfMarkInformation.Keys.Marked, true);
             internals.Catalog.Elements.SetReference(PdfCatalog.Keys.MarkInfo, markInfo);
 
             // Build Structure Tree.
-            StructureTreeRoot = new PdfStructureTreeRoot();
+            StructureTreeRoot = new PdfStructureTreeRoot(document);
             internals.AddObject(StructureTreeRoot);
             internals.Catalog.Elements.SetReference(PdfCatalog.Keys.StructTreeRoot, StructureTreeRoot);
 
             // Set parent tree root.
-            var parentTreeRoot = new PdfNumberTreeNode(true);
+            var parentTreeRoot = new PdfNumberTreeNode(_document, true);
             _document.Internals.AddObject(parentTreeRoot);
             StructureTreeRoot.Elements.SetReference(PdfStructureTreeRoot.Keys.ParentTree, parentTreeRoot);
 
@@ -78,12 +79,10 @@ namespace PdfSharp.UniversalAccessibility
         public PdfStructureElement StructureTreeElementDocument { get; set; }
 
         /// <summary>
-        /// Gets the Universal Accessibility Manager for the document.
+        /// Gets or creates the Universal Accessibility Manager for the specified document.
         /// </summary>
-        public static UAManager ForDocument(PdfDocument document)
-        {
-            return document._uaManager ?? new UAManager(document);
-        }
+        public static UAManager ForDocument(PdfDocument document) 
+            => document._uaManager ??= new UAManager(document);
 
         /// <summary>
         /// Gets the structure builder.
@@ -104,9 +103,7 @@ namespace PdfSharp.UniversalAccessibility
         }
 
         void OnPageRemoved(object sender, PageEventArgs e)
-        {
-            throw new InvalidOperationException("Cannot handle page removing.");
-        }
+            => throw new InvalidOperationException("Cannot handle page removing.");
 
         void OnPageGraphicsCreated(object sender, PageGraphicsEventArgs e)
         {
@@ -135,7 +132,7 @@ namespace PdfSharp.UniversalAccessibility
                     break;
 
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(e), "Invalid ActionType.");
             }
         }
 

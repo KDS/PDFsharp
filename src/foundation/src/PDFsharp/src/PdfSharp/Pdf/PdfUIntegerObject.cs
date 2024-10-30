@@ -16,21 +16,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfUIntegerObject"/> class.
         /// </summary>
-        public PdfUIntegerObject()
-        { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfUIntegerObject"/> class.
-        /// </summary>
-        /// <param name="value">The value.</param>
-        public PdfUIntegerObject(uint value)
-        {
-            Value = value;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfUIntegerObject"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="value">The value.</param>
         public PdfUIntegerObject(PdfDocument document, uint value)

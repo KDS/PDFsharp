@@ -1,99 +1,65 @@
 ﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
-#if WPF
-using System.IO;
-#endif
-
 namespace PdfSharp.Pdf.Signatures
 {
-    internal class RangedStream : Stream
+    /// <summary>
+    /// An internal stream class used to create digital signatures.
+    /// It is based on a stream plus a collection of ranges that define the significant content of this stream.
+    /// The ranges are used to exclude one or more areas of the original stream.
+    /// </summary>
+    class RangedStream : Stream  // StL: Can I say 'RangedStream' in English? SlicedStream?
     {
-        private Range[] ranges;
-
-        public class Range
+        internal class Range(SizeType offset, SizeType length)
         {
+            public SizeType Offset { get; set; } = offset;
 
-            public Range(long offset, long length)
-            {
-                this.Offset = offset;
-                this.Length = length;
-            }
-            public long Offset { get; set; }
-            public long Length { get; set; }
+            public SizeType Length { get; set; } = length;
         }
 
-        private Stream stream { get; set; }
-
-
-        public RangedStream(Stream originalStrem, List<Range> ranges)
+        public RangedStream(Stream originalStream, List<Range> ranges)
         {
-            this.stream = originalStrem;
+            if (originalStream.CanRead != true)
+                throw new InvalidOperationException("A readable stream is required when creating a signed PDF.");
 
-            long previousPosition = 0;
+            if (originalStream.CanSeek != true)
+                throw new InvalidOperationException("A seekable stream is required when creating a signed PDF.");
 
-            this.ranges = ranges.OrderBy(item => item.Offset).ToArray();
+            Stream = originalStream;
+            SizeType previousPosition = 0;
+            _ranges = ranges.OrderBy(item => item.Offset).ToArray();
+            // _ranges = [.. ranges.OrderBy(item => item.Offset)];  // Visual Studio considered this as the simpler expression.
             foreach (var range in ranges)
             {
                 if (range.Offset < previousPosition)
-                    throw new Exception("Ranges are not continuous");
+                    throw new ArgumentException("Ranges are not continuous.", nameof(range));
                 previousPosition = range.Offset + range.Length;
             }
         }
 
-
         public override bool CanRead => true;
 
-        public override bool CanSeek
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public override bool CanSeek => throw new NotImplementedException($"Cannot seek in a {nameof(RangedStream)}.");
 
-        public override bool CanWrite
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool CanWrite => false;
 
-        public override long Length
-        {
-            get
-            {
-                return ranges.Sum(item => item.Length);
-            }
-        }
-
+        public override long Length => _ranges.Sum(item => item.Length);
 
         private IEnumerable<Range> GetPreviousRanges(long position)
-        {
-            return ranges.Where(item => item.Offset < position && item.Offset + item.Length < position);
-        }
+            => _ranges.Where(item => item.Offset < position && item.Offset + item.Length < position);
 
-        private Range GetCurrentRange(long position)
-        {
-            return ranges.FirstOrDefault(item => item.Offset <= position && item.Offset + item.Length > position);
-        }
-
-
+        private Range? GetCurrentRange(long position)
+            => _ranges.FirstOrDefault(item => item.Offset <= position && item.Offset + item.Length > position);
 
         public override long Position
         {
-            get
-            {
-                return GetPreviousRanges(stream.Position).Sum(item => item.Length) + stream.Position - GetCurrentRange(stream.Position).Offset;
-            }
-
+            get => GetPreviousRanges(Stream.Position).Sum(item => item.Length) + Stream.Position - GetCurrentRange(Stream.Position)!.Offset;
             set
             {
                 Range? currentRange = null;
-                List<Range> previousRanges = new List<Range>();
-                long maxPosition = 0;
-                foreach (var range in ranges)
+                List<Range> previousRanges = [];
+                SizeType maxPosition = 0;
+                foreach (var range in _ranges)
                 {
                     currentRange = range;
                     maxPosition += range.Length;
@@ -101,68 +67,75 @@ namespace PdfSharp.Pdf.Signatures
                         break;
                     previousRanges.Add(range);
                 }
+                Debug.Assert(currentRange != null);
 
-                long positionInCurrentRange = value - previousRanges.Sum(item => item.Length);
-                stream.Position = currentRange.Offset + positionInCurrentRange;
+                SizeType positionInCurrentRange = (SizeType)(value - previousRanges.Sum(item => item.Length));
+                Stream.Position = currentRange.Offset + positionInCurrentRange;
             }
         }
 
-
-
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
+        public override void Flush() => throw new NotImplementedException(nameof(Flush));
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            var length = Stream.Length;
 
-            var length = stream.Length;
-            int retVal = 0;
-            for (int i = 0; i < count; i++)
+            // Possible, but needs extra coding we do not need until there is a real world use case.
+            // Write to issues (at) pdfsharp.net if you need super large signed PDF files.
+            if (length > Int32.MaxValue)
+                throw new NotImplementedException("You currently cannot sign a PDF file larger than 2 GiByte. We'll check if it is possible if someone needs it.");
+
+            int read = 0;
+            // Optimized read if possible.
+            if (offset == 0 && count == Length)
             {
-
-                if (stream.Position == length)
+                foreach (var range in _ranges)
                 {
-                    break;
+                    Debug.Assert(range.Length <= UInt32.MaxValue, "Signing of large PDF files is not implemented.");
+                    int rangeLength = (int)range.Length;
+                    Stream.Position = range.Offset;
+                    read += Stream.Read(buffer, offset, rangeLength);
+                    offset += rangeLength;
                 }
-
-                PerformSkipIfNeeded();
-                retVal += stream.Read(buffer, offset++, 1);
-
+                Debug.Assert(read == count);
+                return read;
             }
 
-            return retVal;
+            // We come here e.g. with Bouncy Castle signer.
+
+            // We calculate the current range for each byte in the stream using LINQ.
+            // This works, but is very slow. If we get performance issues
+            // it should be reimplemented by using the ranges here.
+            // But this works, so YAGNI.
+            for (int i = 0; i < count; i++)
+            {
+                if (Stream.Position == length)
+                    break;
+
+                PerformSkipIfNeeded();
+                read += Stream.Read(buffer, offset++, 1);
+            }
+            return read;
         }
 
-
-        private void PerformSkipIfNeeded()
+        void PerformSkipIfNeeded()
         {
-            var currentRange = GetCurrentRange(stream.Position);
-
+            var currentRange = GetCurrentRange(Stream.Position);
             if (currentRange == null)
-                stream.Position = GetNextRange().Offset;
+                Stream.Position = GetNextRange().Offset;
         }
 
-        private Range GetNextRange()
-        {
-            return ranges.OrderBy(item => item.Offset).First(item => item.Offset > stream.Position);
-        }
+        Range GetNextRange()
+            => _ranges.OrderBy(item => item.Offset).First(item => item.Offset > Stream.Position);
 
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotImplementedException(nameof(Seek));
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
+        public override void SetLength(long value) => throw new NotImplementedException(nameof(SetLength));
 
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException(nameof(Write));
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
+        readonly Range[] _ranges;
+
+        Stream Stream { get; }
     }
 }

@@ -1,6 +1,7 @@
 // PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
 using PdfSharp.Drawing;
@@ -11,7 +12,10 @@ using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.Internal;
 using PdfSharp.Pdf.IO;
 using PdfSharp.Pdf.AcroForms;
+using PdfSharp.Pdf.Filters;
 using PdfSharp.Pdf.Security;
+using PdfSharp.Pdf.Signatures;
+using PdfSharp.Pdf.Structure;
 using PdfSharp.UniversalAccessibility;
 
 // ReSharper disable InconsistentNaming
@@ -19,42 +23,28 @@ using PdfSharp.UniversalAccessibility;
 
 namespace PdfSharp.Pdf
 {
-    internal class PdfDocumentEventArgs : EventArgs
-    {
-        public PdfDocumentEventArgs(PdfWriter writer)
-        {
-            Writer = writer;
-        }
-
-        public PdfWriter Writer { get; set; }
-    }
-
     /// <summary>
     /// Represents a PDF document.
     /// </summary>
-    [DebuggerDisplay("(Name={" + nameof(Name) + "})")]  // A name makes debugging easier
+    [DebuggerDisplay("(Name={" + nameof(Name) + "})")]  // A name makes debugging easier.
     public sealed class PdfDocument : PdfObject, IDisposable
     {
-        internal event EventHandler BeforeSave = (s, e) => { };
-        internal event EventHandler<PdfDocumentEventArgs> AfterSave = (s, e) => { };
-#if DEBUG_
-        static PdfDocument()
-        {
-            PSSR.TestResourceMessages();
-            //string test = PSSR.ResMngr.GetString("SampleMessage1");
-            //test.GetType();
-        }
-#endif
+        /// <summary>
+        /// Used to report that saving the document has been finished.
+        /// </summary>
+        /// <param name="writer"></param>
+        internal delegate void AfterSaveCallback(PdfWriter writer);
 
+        internal AfterSaveCallback? AfterSave;
         /// <summary>
         /// Creates a new PDF document in memory.
         /// To open an existing PDF file, use the PdfReader class.
         /// </summary>
-        public PdfDocument()
+        public PdfDocument(): base(null!)
         {
             PdfSharpLogHost.Logger.PdfDocumentCreated(Name);
             //PdfDocument.Gob.AttachDocument(Handle);
-
+            _document = this;
             _creation = DateTime.Now;
             _state = DocumentState.Created;
             _version = 17;
@@ -79,8 +69,9 @@ namespace PdfSharp.Pdf
         /// Do not call Save for documents created with this constructor, just call Close.
         /// To open an existing PDF file, use the PdfReader class.
         /// </summary>
-        public PdfDocument(Stream outputStream)
+        public PdfDocument(Stream outputStream): base(null!)
         {
+            _document = this;
             _creation = DateTime.Now;
             _state = DocumentState.Created;
             _version = 14;
@@ -90,10 +81,11 @@ namespace PdfSharp.Pdf
             OutStream = outputStream;
         }
 
-        internal PdfDocument(Lexer lexer)
+        internal PdfDocument(Lexer lexer): base(null!)
         {
             //PdfDocument.Gob.AttachDocument(Handle);
 
+            _document = this;
             _creation = DateTime.Now;
             _state = DocumentState.Imported;
 
@@ -161,7 +153,23 @@ namespace PdfSharp.Pdf
         public object? Tag { get; set; }
 
         /// <summary>
-        /// Encapsulates the documentâ€™s events.
+        /// Temporary hack to set a value that tells PDFsharp to create a PDF/A conform document.
+        /// </summary>
+        public void SetPdfA()  // HACK
+        {
+            _isPdfA = true;
+            _ = UAManager.ForDocument(this);
+        }
+
+        /// <summary>
+        /// Gets a value indicating that you create a PDF/A conform document.
+        /// This function is temporary and will change in the future.
+        /// </summary>
+        public bool IsPdfA => _isPdfA;  // HACK
+        bool _isPdfA;
+
+        /// <summary>
+        /// Encapsulates the document’s events.
         /// </summary>
         public DocumentEvents Events => _documentEvents ??= new();
         DocumentEvents? _documentEvents;
@@ -192,7 +200,7 @@ namespace PdfSharp.Pdf
         static int _nameCount;
 
         //internal bool CanModify => true;
-        internal bool CanModify => _openMode == PdfDocumentOpenMode.Modify;
+        internal bool CanModify => _openMode == PdfDocumentOpenMode.Modify || _openMode == PdfDocumentOpenMode.Append;
 
         /// <summary>
         /// Closes this instance.
@@ -200,20 +208,20 @@ namespace PdfSharp.Pdf
         /// </summary>
         public void Close()
         {
-            if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
-
             if (OutStream != null)
             {
+                if (!CanModify)
+                    throw new InvalidOperationException(PsMsgs.CannotModify);
+
                 EnsureNotYetSaved();
 
                 // Get security handler if document gets encrypted.
                 var effectiveSecurityHandler = SecuritySettings.EffectiveSecurityHandler;
 
-                var writer = new PdfWriter(OutStream, effectiveSecurityHandler);
+                var writer = new PdfWriter(OutStream, _document, effectiveSecurityHandler);
                 try
                 {
-                    DoSave(writer);
+                    DoSaveAsync(writer).GetAwaiter().GetResult();
                 }
                 finally
                 {
@@ -227,53 +235,54 @@ namespace PdfSharp.Pdf
         /// </summary>
         public void Save(string path)
         {
-            EnsureNotYetSaved();
-
-            if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
-
-            using Stream stream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite/*Read access needed for SignatureHandler*/, FileShare.None);
-            Save(stream);
+            // Safely call the async version on the current thread.
+            SaveAsync(path).GetAwaiter().GetResult();
         }
 
-#if UWP
         /// <summary>
-        /// Saves the document to the specified path. If a file already exists, it will be overwritten.
+        /// Saves the document async to the specified path. If a file already exists, it will be overwritten.
+        /// The async version of save is useful if you want to create a signed PDF file with a time stamp.
+        /// A time stamp server should be accessed asynchronously, and therefore we introduced this function.
         /// </summary>
-        public async Task SaveAsync(string path, bool closeStream)
+        public async Task SaveAsync(string path)
         {
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
 
-            // Just march through...
+            // We need ReadWrite when adding a signature. Write is sufficient if not adding a signature.
+            var fileAccess = _digitalSignatureHandler == null ? FileAccess.Write : FileAccess.ReadWrite;
 
-            var file = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("My1st.pdf", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            var stream = await file.OpenStreamForWriteAsync();
-            using (var writer = new StreamWriter(stream))
-            {
-                Save(stream, false);
-            }
-
-            //var ms = new MemoryStream();
-            //Save(ms, false);
-            //byte[] pdf = ms.ToArray();
-            //ms.Close();
-            //await stream.WriteAsync(pdf, 0, pdf.Length);
-            //stream.Close();
+            // ReSharper disable once UseAwaitUsing because we need no DisposeAsync for a simple FileStream.
+            using var stream = new FileStream(path, FileMode.Create, fileAccess, FileShare.None);
+            await SaveAsync(stream).ConfigureAwait(false);
         }
-#endif
 
         /// <summary>
         /// Saves the document to the specified stream.
         /// </summary>
-        public void Save(Stream stream, bool closeStream)
+        public void Save(Stream stream, bool closeStream = false)
+        {
+            // Safely call the async version on the current thread.
+            SaveAsync(stream, closeStream).GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Saves the document to the specified stream.
+        /// The async version of save is useful if you want to create a signed PDF file with a time stamp.
+        /// A time stamp server should be accessed asynchronously, and therefore we introduced this function.
+        /// </summary>
+        public async Task SaveAsync(Stream stream, bool closeStream = false)
         {
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
+
+            // #PDF-A
+            if (IsPdfA)
+                PrepareForPdfA();
 
             // TODO: more diagnostic checks
             string message = "";
@@ -286,19 +295,18 @@ namespace PdfSharp.Pdf
             PdfWriter? writer = null;
             try
             {
-                writer = new PdfWriter(stream, effectiveSecurityHandler);
-                DoSave(writer);
+                Debug.Assert(ReferenceEquals(_document, this));
+                writer = new(stream, _document, effectiveSecurityHandler);
+                await DoSaveAsync(writer).ConfigureAwait(false);
             }
             finally
             {
                 if (stream != null!)
                 {
                     if (closeStream)
-#if UWP
-                        stream.Dispose();
-#else
+                    {
                         stream.Close();
-#endif
+                    }
                     else
                     {
                         if (stream is { CanRead: true, CanSeek: true })
@@ -310,23 +318,13 @@ namespace PdfSharp.Pdf
         }
 
         /// <summary>
-        /// Saves the document to the specified stream.
-        /// The stream is not closed by this function.
-        /// (Older versions of PDFsharp close the stream. That was not very useful.)
-        /// </summary>
-        public void Save(Stream stream)
-            => Save(stream, false);
-
-        /// <summary>
         /// Implements saving a PDF file.
         /// </summary>
-        void DoSave(PdfWriter writer)
+        async Task DoSaveAsync(PdfWriter writer)
         {
             PdfSharpLogHost.Logger.PdfDocumentSaved(Name);
 
-            BeforeSave(this, EventArgs.Empty);
-
-            if (_pages == null || _pages.Count == 0)
+            if (Pages == null || Pages.Count == 0)
             {
                 if (OutStream != null)
                 {
@@ -338,10 +336,17 @@ namespace PdfSharp.Pdf
 
             try
             {
-                // HACK: Remove XRefTrailer
+                // Prepare for signing.
+                if (_digitalSignatureHandler != null)
+                    await _digitalSignatureHandler.AddSignatureComponentsAsync().ConfigureAwait(false);
+
+                // Remove XRefTrailer
                 if (Trailer is PdfCrossReferenceStream crossReferenceStream)
                 {
-                    Trailer = new PdfTrailer(crossReferenceStream);
+                    Trailer = new PdfTrailer(crossReferenceStream)
+                    {
+                        Position = crossReferenceStream.Position
+                    };
                 }
 
                 var effectiveSecurityHandler = _securitySettings?.EffectiveSecurityHandler;
@@ -355,6 +360,16 @@ namespace PdfSharp.Pdf
                 }
                 else
                     Trailer.Elements.Remove(PdfTrailer.Keys.Encrypt);
+
+                if (_openMode == PdfDocumentOpenMode.Append)
+                {
+                    // Prepare used fonts.
+                    _fontTable?.PrepareForSave();
+                    // Let catalog do the rest.
+                    Catalog.PrepareForSave();
+                    SaveIncrementally(writer);
+                    return;
+                }
 
                 PrepareForSave();
 
@@ -373,12 +388,18 @@ namespace PdfSharp.Pdf
                     iref.Position = writer.Position;
                     iref.Value.WriteObject(writer);
                 }
-                SizeType startxref = writer.Position;
+                // ReSharper disable once RedundantCast. Redundant only if 64 bit.
+                var startXRef = (SizeType)writer.Position;
                 IrefTable.WriteObject(writer);
                 writer.WriteRaw("trailer\n");
                 Trailer.Elements.SetInteger("/Size", count + 1);
                 Trailer.WriteObject(writer);
-                writer.WriteEof(this, startxref);
+                writer.WriteEof(this, startXRef);
+
+                // #Signature: What about encryption + signing ??
+                // Prepare for signing.
+                if (_digitalSignatureHandler != null)
+                    await _digitalSignatureHandler.ComputeSignatureAndRange(writer).ConfigureAwait(false);
 
                 //if (encrypt)
                 //{
@@ -388,15 +409,145 @@ namespace PdfSharp.Pdf
             }
             finally
             {
-                if (writer != null!)
-                {
-                    AfterSave(this, new PdfDocumentEventArgs(writer));
-
-                    writer.Stream.Flush();
-                    // DO NOT CLOSE WRITER HERE
-                }
+                //await writer.Stream.FlushAsync().ConfigureAwait(false);
+                writer.Stream.Flush();
+                // Do not close the stream writer here.
+                AfterSave?.Invoke(writer);
                 _state |= DocumentState.Saved;
             }
+        }
+
+        void PrepareForPdfA()  // Just a first hack.
+        {
+            var internals = Internals;
+
+            Debug.Assert(_uaManager != null);
+            // UAManager sets MarkInformation.
+            if (_uaManager == null)
+            {
+                // Marked must be true in MarkInfo.
+                var markInfo = new PdfMarkInformation(Owner);
+                //internals.AddObject(markInfo);
+
+                markInfo.Elements.SetBoolean(PdfMarkInformation.Keys.Marked, true);
+                //internals.Catalog.Elements.SetReference(PdfCatalog.Keys.MarkInfo, markInfo);
+                internals.Catalog.Elements.Add(PdfCatalog.Keys.MarkInfo, markInfo);
+            }
+
+            var outputIntentsArray = new PdfArray(this);
+            //internals.AddObject(outputIntentsArray);
+            var outputIntents = new PdfDictionary(this);
+            outputIntentsArray.Elements.Add(outputIntents);
+
+            outputIntents.Elements.Add("/Type", new PdfName("/OutputIntent"));
+            outputIntents.Elements.Add("/S", new PdfName("/GTS_PDFA1"));
+            outputIntents.Elements.Add("/OutputConditionIdentifier", new PdfString("sRGB"));
+            outputIntents.Elements.Add("/RegistryName", new PdfString("http://www.color.org"));
+            outputIntents.Elements.Add("/Info", new PdfString("Creator: ColorOrg     Manufacturer:IEC    Model:sRGB"));
+
+            var profileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("PdfSharp.Resources.sRGB2014.icc")
+                ?? throw new InvalidOperationException("Embedded color profile was not found.");
+
+            var profile = new byte[profileStream.Length];
+            var read = profileStream.Read(profile, 0, (int)profileStream.Length);
+            if (read != profileStream.Length)
+                throw new InvalidOperationException("Embedded color profile was not read.");
+
+            var fd = new FlateDecode();
+            byte[] profileCompressed = fd.Encode(profile, Options.FlateEncodeMode);
+
+            var profileObject = new PdfDictionary(this);
+            IrefTable.Add(profileObject);
+            profileObject.Stream = new PdfDictionary.PdfStream(profileCompressed, profileObject);
+            profileObject.Elements["/N"] = new PdfInteger(3);
+            profileObject.Elements["/Length"] = new PdfInteger(profileCompressed.Length);
+            profileObject.Elements["/Filter"] = new PdfName("/FlateDecode");
+
+            outputIntents.Elements.Add("/DestOutputProfile", profileObject.Reference);
+            //internals.Catalog.Elements.SetReference(PdfCatalog.Keys.OutputIntents, outputIntentsArray);
+            internals.Catalog.Elements.Add(PdfCatalog.Keys.OutputIntents, outputIntentsArray);
+        }
+
+        /// <summary>
+        /// Saves changes made to the document as an incremental update.<br></br>
+        /// If the document was not modified, this method does nothing.<br></br>
+        /// </summary>
+        /// <remarks>
+        /// Note that when updating a document that is <b>linearized</b>, the document will no longer be linearized
+        /// as the update changes the file-length and may invalidate the existing hint-tables.<br></br>
+        /// Acrobat(Reader) may complain that the file is damaged and need to be repaired.<br></br>
+        /// </remarks>
+        /// <param name="writer"></param>
+        internal void SaveIncrementally(PdfWriter writer)
+        {
+            if (IrefTable.ModifiedObjects.Count == 0)
+                return;
+
+            _securitySettings?.EffectiveSecurityHandler?.PrepareForWriting();
+
+            writer.Stream.Seek(0, SeekOrigin.End);
+            // there may be the line "%%EOF" at the end of the file, make sure we start on a new line
+            writer.WriteRaw('\n');
+
+            var objects = new List<Tuple<int, int, long>>(IrefTable.ModifiedObjects.Count);
+
+            foreach (var iref in IrefTable.ModifiedObjects.Values.OrderBy(it => it.ObjectNumber))
+            {
+                iref.Position = writer.Position;
+                iref.Value.WriteObject(writer);
+                objects.Add(new(iref.ObjectNumber, iref.GenerationNumber, iref.Position));
+            }
+            SizeType startxref = writer.Position;
+
+            writer.WriteRaw("xref\n");
+
+            writer.WriteRaw(Invariant($"0 1\n"));
+            writer.WriteRaw(Invariant($"{0:0000000000} {65535:00000} f \n"));
+
+            // build chunks of consecutively numbered objects
+            var startIndex = 0;
+            var chunk = new List<Tuple<int, int, long>>(objects.Count);
+            do
+            {
+                chunk.Clear();
+                chunk.AddRange(objects.Skip(startIndex).TakeWhile((it, idx) =>
+                {
+                    return idx == 0 || it.Item1 == objects[idx + startIndex - 1].Item1 + 1;
+                }));
+                startIndex += chunk.Count;
+
+                writer.WriteRaw(Invariant($"{chunk[0].Item1} {chunk.Count}\n"));
+                foreach (var element in chunk)
+                {
+                    // Acrobat is very pedantic; it must be exactly 20 bytes per line.
+                    writer.WriteRaw(Invariant($"{element.Item3:0000000000} {element.Item2:00000} n \n"));
+                }
+            } while (startIndex < objects.Count);
+
+            var newTrailer = new PdfTrailer(this);
+            // copy all entries from the previous trailer, as specified in the spec
+            foreach (var key in Trailer.Elements.Keys)
+            {
+                // skip these as we provide new values for them
+                if (key == PdfTrailer.Keys.Prev || key == PdfTrailer.Keys.Size)
+                    continue;
+                newTrailer.Elements[key] = Trailer.Elements[key];
+                if (key == PdfTrailer.Keys.ID)
+                {
+                    // first id stays the same, second is updated for each update
+                    var id1 = Trailer.GetDocumentID(0);
+                    var docID = Guid.NewGuid().ToByteArray();
+                    string id2 = PdfEncoders.RawEncoding.GetString(docID, 0, docID.Length);
+                    newTrailer.Elements.SetObject(PdfTrailer.Keys.ID, new PdfArray(this,
+                        new PdfString(id1, PdfStringFlags.HexLiteral), new PdfString(id2, PdfStringFlags.HexLiteral)));
+                }
+            }
+            newTrailer.Size = IrefTable.MaxObjectNumber + 1;
+            newTrailer.Elements.SetObject(PdfTrailer.Keys.Prev, new PdfLongIntegerObject(this, Trailer.Position));
+
+            writer.WriteRaw("trailer\n");
+            newTrailer.WriteObject(writer);
+            writer.WriteEof(this, startxref);
         }
 
         /// <summary>
@@ -444,7 +595,7 @@ namespace PdfSharp.Pdf
             int removed = IrefTable.Compact();
             if (removed != 0 && PdfSharpLogHost.Logger.IsEnabled(LogLevel.Information))
             {
-                PdfSharpLogHost.Logger.LogInformation($"\"PrepareForSave: Number of deleted unreachable objects: {removed}");
+                PdfSharpLogHost.Logger.LogInformation($"PrepareForSave: Number of deleted unreachable objects: {removed}");
             }
             IrefTable.Renumber();
 #endif
@@ -494,7 +645,7 @@ namespace PdfSharp.Pdf
         //internal bool EarlyWrite => false;
 
         /// <summary>
-        /// Gets or sets the PDF version number. Return value 14 e.g. means PDF 1.4 / Acrobat 5 etc.
+        /// Gets or sets the PDF version number as integer. Return value 14 e.g. means PDF 1.4 / Acrobat 5 etc.
         /// </summary>
         public int Version
         {
@@ -504,9 +655,9 @@ namespace PdfSharp.Pdf
                 EnsureNotYetSaved();
 
                 if (!CanModify)
-                    throw new InvalidOperationException(PSSR.CannotModify);
+                    throw new InvalidOperationException(PsMsgs.CannotModify);
                 if (value is < 12 or > 20) // TODO not really implemented
-                    throw new ArgumentException(PSSR.InvalidVersionNumber, nameof(value));
+                    throw new ArgumentException(PsMsgs.InvalidVersionNumber(value), nameof(value));
                 _version = value;
             }
         }
@@ -551,9 +702,7 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Gets the file size of the document.
         /// </summary>
-        public long FileSize => _fileSize;
-
-        internal long _fileSize; // TODO: make private
+        public long FileSize { get; internal set; }
 
         /// <summary>
         /// Gets the full qualified file name if the document was read form a file, or an empty string otherwise.
@@ -581,12 +730,17 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Returns a value indicating whether the document is read only or can be modified.
         /// </summary>
-        public bool IsReadOnly => (_openMode != PdfDocumentOpenMode.Modify);
+        public bool IsReadOnly => (_openMode != PdfDocumentOpenMode.Modify && _openMode != PdfDocumentOpenMode.Append);
 
-        internal Exception DocumentNotImported()
-        {
-            return new InvalidOperationException("Document not imported.");
-        }
+        /// <summary>
+        /// Gets a value indicating whether the document was opened in append-mode
+        /// </summary>
+        public bool IsAppending => _openMode == PdfDocumentOpenMode.Append;
+
+        //internal Exception DocumentNotImported()
+        //{
+        //    return new InvalidOperationException("Document not imported.");
+        //}
 
         /// <summary>
         /// Gets information about the document.
@@ -630,7 +784,7 @@ namespace PdfSharp.Pdf
             set
             {
                 if (!CanModify)
-                    throw new InvalidOperationException(PSSR.CannotModify);
+                    throw new InvalidOperationException(PsMsgs.CannotModify);
                 Catalog.PageLayout = value;
             }
         }
@@ -644,7 +798,7 @@ namespace PdfSharp.Pdf
             set
             {
                 if (!CanModify)
-                    throw new InvalidOperationException(PSSR.CannotModify);
+                    throw new InvalidOperationException(PsMsgs.CannotModify);
                 Catalog.PageMode = value;
             }
         }
@@ -662,7 +816,22 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Get the AcroForm dictionary.
         /// </summary>
-        public PdfAcroForm AcroForm => Catalog.AcroForm;
+        public PdfAcroForm? AcroForm => Catalog.AcroForm;
+
+        /// <summary>
+        /// Gets the existing <see cref="PdfAcroForm"/> or creates a new one, if there is no <see cref="PdfAcroForm"/> in the current document
+        /// </summary>
+        /// <returns>The <see cref="PdfAcroForm"/> associated with this document</returns>
+        public PdfAcroForm GetOrCreateAcroForm()
+        {
+            var form = AcroForm;
+            if (form == null)
+            {
+                form = new PdfAcroForm(this);
+                Catalog.AcroForm = form;
+            }
+            return form;
+        }
 
         /// <summary>
         /// Gets or sets the default language of the document.
@@ -762,7 +931,7 @@ namespace PdfSharp.Pdf
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
             return Catalog.Pages.Add();
         }
 
@@ -776,7 +945,7 @@ namespace PdfSharp.Pdf
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
             return Catalog.Pages.Add(page);
         }
 
@@ -788,7 +957,7 @@ namespace PdfSharp.Pdf
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
             return Catalog.Pages.Insert(index);
         }
 
@@ -802,7 +971,7 @@ namespace PdfSharp.Pdf
             EnsureNotYetSaved();
 
             if (!CanModify)
-                throw new InvalidOperationException(PSSR.CannotModify);
+                throw new InvalidOperationException(PsMsgs.CannotModify);
             return Catalog.Pages.Insert(index, page);
         }
 
@@ -839,7 +1008,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public void Flatten()
         {
-            for (int idx = 0; idx < AcroForm.Fields.Count; idx++)
+            for (int idx = 0; idx < AcroForm?.Fields.Count; idx++)
             {
                 AcroForm.Fields[idx].ReadOnly = true;
             }
@@ -898,9 +1067,9 @@ namespace PdfSharp.Pdf
 
             public readonly string ID = document._guid.ToString("B").ToUpper();
 
-            
-            
-            
+
+
+
             public override bool Equals(object? obj)
             {
                 if (obj is DocumentHandle handle)
@@ -936,5 +1105,14 @@ namespace PdfSharp.Pdf
         internal DocumentState _state;
         internal PdfDocumentOpenMode _openMode;
         internal UAManager? _uaManager;
+        internal DigitalSignatureHandler? _digitalSignatureHandler;
     }
+
+#if true_
+    // UNDER_CONSTRUCTION
+    static class PDFA_
+    {
+        public static bool IsPdfA => true;
+    }
+#endif
 }

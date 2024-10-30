@@ -14,14 +14,6 @@ namespace PdfSharp.Pdf.Annotations
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfRubberStampAnnotation"/> class.
         /// </summary>
-        public PdfRubberStampAnnotation()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfRubberStampAnnotation"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         public PdfRubberStampAnnotation(PdfDocument document)
             : base(document)

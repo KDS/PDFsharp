@@ -13,14 +13,6 @@ namespace PdfSharp.Pdf.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfRemoteGoToAction"/> class.
         /// </summary>
-        public PdfRemoteGoToAction()
-        {
-            Inititalize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfRemoteGoToAction"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfRemoteGoToAction(PdfDocument document)
             : base(document)
@@ -35,9 +27,9 @@ namespace PdfSharp.Pdf.Actions
         /// <param name="destinationName">The named destination’s name in the target document.</param>
         /// <param name="newWindow">True, if the destination document shall be opened in a new window.
         /// If not set, the viewer application should behave in accordance with the current user preference.</param>
-        public static PdfRemoteGoToAction CreateRemoteGoToAction(string documentPath, string destinationName, bool? newWindow = null)
+        public static PdfRemoteGoToAction CreateRemoteGoToAction(PdfDocument document, string documentPath, string destinationName, bool? newWindow = null)
         {
-            var action = new PdfRemoteGoToAction
+            var action = new PdfRemoteGoToAction(document)
             {
                 _documentPath = documentPath,
                 _destinationName = destinationName,

@@ -16,14 +16,6 @@ namespace PdfSharp.Pdf
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfStringObject"/> class.
         /// </summary>
-        public PdfStringObject()
-        {
-            _flags = PdfStringFlags.RawEncoding;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfStringObject"/> class.
-        /// </summary>
         /// <param name="document">The document.</param>
         /// <param name="value">The value.</param>
         public PdfStringObject(PdfDocument document, string value)
@@ -38,7 +30,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         /// <param name="value">The value.</param>
         /// <param name="encoding">The encoding.</param>
-        public PdfStringObject(string value, PdfStringEncoding encoding)
+        public PdfStringObject(PdfDocument document, string value, PdfStringEncoding encoding) : base(document)
         {
             _value = value;
             //if ((flags & PdfStringFlags.EncodingMask) == 0)
@@ -46,7 +38,7 @@ namespace PdfSharp.Pdf
             _flags = (PdfStringFlags)encoding;
         }
 
-        internal PdfStringObject(string value, PdfStringFlags flags)
+        internal PdfStringObject(PdfDocument document, string value, PdfStringFlags flags) : base(document)
         {
             _value = value;
             //if ((flags & PdfStringFlags.EncodingMask) == 0)

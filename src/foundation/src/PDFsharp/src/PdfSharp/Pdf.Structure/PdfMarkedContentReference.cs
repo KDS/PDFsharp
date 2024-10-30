@@ -11,14 +11,6 @@ namespace PdfSharp.Pdf.Structure
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfMarkedContentReference"/> class.
         /// </summary>
-        public PdfMarkedContentReference()
-        {
-            Elements.SetName(Keys.Type, "/MCR");
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfMarkedContentReference"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfMarkedContentReference(PdfDocument document)
             : base(document)

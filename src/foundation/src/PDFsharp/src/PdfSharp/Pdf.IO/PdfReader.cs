@@ -282,7 +282,7 @@ namespace PdfSharp.Pdf.IO
                 _document = new PdfDocument(lexer);
                 _document._state |= DocumentState.Imported;
                 _document._openMode = openMode;
-                _document._fileSize = stream.Length;
+                _document.FileSize = stream.Length;
 
                 // Get file version.
                 byte[] header = new byte[1024];
@@ -290,7 +290,7 @@ namespace PdfSharp.Pdf.IO
                 var _ = stream.Read(header, 0, 1024);
                 _document._version = GetPdfFileVersion(header);
                 if (_document._version == 0)
-                    throw new InvalidOperationException(PSSR.InvalidPdf);
+                    throw new InvalidOperationException(PsMsgs.InvalidPdf);
 
                 // Set IsUnderConstruction for IrefTable to true. This allows Parser.ParseObject() to insert placeholder references for objects not yet known.
                 // This is necessary for documents with objects saved in objects streams, which are read and decoded after reading the file level PdfObjects.
@@ -303,7 +303,7 @@ namespace PdfSharp.Pdf.IO
                 _document.Trailer = parser.ReadTrailer();
                 if (_document.Trailer == null!)
                     ParserDiagnostics.ThrowParserException(
-                        "Invalid PDF file: no trailer found."); // TODO L10N using PSSR.
+                        "Invalid PDF file: no trailer found."); // TODO L10N using PsMsgs
                 // References available by now: All references to file-level objects.
                 // Reference.Values available by now: All trailers and cross-reference streams (which are not encrypted by definition). 
 
@@ -340,12 +340,13 @@ namespace PdfSharp.Pdf.IO
                         else
                         {
                             if (password == null)
-                                throw new PdfReaderException(PSSR.PasswordRequired);
+                                throw new PdfReaderException(PsMsgs.PasswordRequired);
                             else
-                                throw new PdfReaderException(PSSR.InvalidPassword);
+                                throw new PdfReaderException(PsMsgs.InvalidPassword);
                         }
                     }
-                    else if (validity == PasswordValidity.UserPassword && openMode == PdfDocumentOpenMode.Modify)
+                    else if (validity == PasswordValidity.UserPassword
+                        && (openMode == PdfDocumentOpenMode.Modify || openMode == PdfDocumentOpenMode.Append))
                     {
                         if (passwordProvider != null)
                         {
@@ -357,7 +358,7 @@ namespace PdfSharp.Pdf.IO
                             goto TryAgain;
                         }
                         else
-                            throw new PdfReaderException(PSSR.OwnerPasswordRequired);
+                            throw new PdfReaderException(PsMsgs.OwnerPasswordRequired);
                     }
                     // ReSharper restore RedundantIfElseBlock
                 }
@@ -448,16 +449,19 @@ namespace PdfSharp.Pdf.IO
                     "All references saved in IrefTable should have been created when their referred PdfObject has been accessible.");
 
                 // Get and update object’s references.
-                FinishItemReferences(iref.Value, _document, finishedObjects);
+                FinishItemReferences(iref.Value, iref, _document, finishedObjects);
             }
 
+            // why setting it here AND in Trailer.Finish ??
             _document.IrefTable.IsUnderConstruction = false;
 
             // Fix references of trailer values and then objects and irefs are consistent.
             _document.Trailer.Finish();
+
+            Debug.Assert(_document.IrefTable.ModifiedObjects.Count == 0, "There should be no modified objects");
         }
 
-        void FinishItemReferences(PdfItem? pdfItem, PdfDocument document, HashSet<PdfObject> finishedObjects)
+        void FinishItemReferences(PdfItem? pdfItem, PdfReference itemReference, PdfDocument document, HashSet<PdfObject> finishedObjects)
         {
             // Only PdfObjects may contain further PdfReferences.
             if (pdfItem is not PdfObject pdfObject)
@@ -481,10 +485,12 @@ namespace PdfSharp.Pdf.IO
             switch (pdfObject)
             {
                 case PdfDictionary childDictionary:
-                    FinishChildReferences(childDictionary, finishedObjects);
+                    FinishChildReferences(childDictionary, childDictionary.Reference ?? itemReference, finishedObjects);
+                    childDictionary.SetModified(false);
                     break;
                 case PdfArray childArray:
-                    FinishChildReferences(childArray, finishedObjects);
+                    FinishChildReferences(childArray, childArray.Reference ?? itemReference, finishedObjects);
+                    childArray.SetModified(false);
                     break;
             }
 #else
@@ -496,9 +502,13 @@ namespace PdfSharp.Pdf.IO
 #endif
         }
 
-        void FinishChildReferences(PdfDictionary dictionary, HashSet<PdfObject> finishedObjects)
+        void FinishChildReferences(PdfDictionary dictionary, PdfReference containingReference, HashSet<PdfObject> finishedObjects)
         {
-            // Dictionary elements are modified inside loop. Avoid "Collection was modified; enumeration operation may not execute" error occuring in net 4.7.2.
+            if (dictionary.ObjectNumber == 15)
+                GetType();
+            if (dictionary.Reference is null && dictionary.ContainingReference is null)
+                dictionary.ContainingReference = containingReference;
+
             // There is no way to access KeyValuePairs via index natively to use a for loop with.
             // Instead, enumerate Keys and get value via Elements[key], which shall be O(1).
             foreach (var key in dictionary.Elements.Keys)
@@ -514,12 +524,15 @@ namespace PdfSharp.Pdf.IO
                 }
 
                 // Get and update item’s references.
-                FinishItemReferences(item, _document, finishedObjects);
+                FinishItemReferences(item, containingReference, _document, finishedObjects);
             }
         }
 
-        void FinishChildReferences(PdfArray array, HashSet<PdfObject> finishedObjects)
+        void FinishChildReferences(PdfArray array, PdfReference containingReference, HashSet<PdfObject> finishedObjects)
         {
+            if (array.Reference is null && array.ContainingReference is null)
+                array.ContainingReference = containingReference;
+
             var elements = array.Elements;
             for (var i = 0; i < elements.Count; i++)
             {
@@ -534,7 +547,7 @@ namespace PdfSharp.Pdf.IO
                 }
 
                 // Get and update item’s references.
-                FinishItemReferences(item, _document, finishedObjects);
+                FinishItemReferences(item, containingReference, _document, finishedObjects);
             }
         }
 

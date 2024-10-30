@@ -13,14 +13,6 @@ namespace PdfSharp.Pdf.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfGoToAction"/> class.
         /// </summary>
-        public PdfGoToAction()
-        {
-            Inititalize();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PdfGoToAction"/> class.
-        /// </summary>
         /// <param name="document">The document that owns this object.</param>
         public PdfGoToAction(PdfDocument document)
             : base(document)
@@ -32,9 +24,9 @@ namespace PdfSharp.Pdf.Actions
         /// Creates a link within the current document.
         /// </summary>
         /// <param name="destinationName">The Named Destination’s name in the target document.</param>
-        public static PdfGoToAction CreateGoToAction(string destinationName)
+        public static PdfGoToAction CreateGoToAction(PdfDocument document, string destinationName)
         {
-            var action = new PdfGoToAction
+            var action = new PdfGoToAction(document)
             {
                 _destinationName = destinationName
             };

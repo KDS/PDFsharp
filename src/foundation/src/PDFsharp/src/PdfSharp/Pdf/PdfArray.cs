@@ -3,6 +3,7 @@
 
 using System.Collections;
 using System.Text;
+using PdfSharp.Internal;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 
@@ -15,10 +16,38 @@ namespace PdfSharp.Pdf
     public class PdfArray : PdfObject, IEnumerable<PdfItem>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PdfArray"/> class.
+        /// Gets a value that determines whether the object was modified after loading.
         /// </summary>
-        public PdfArray()
-        { }
+        internal bool IsModified { get; private set; }
+
+        /// <summary>
+        /// Sets the modified-status of this object
+        /// </summary>
+        /// <param name="modified"></param>
+        internal void SetModified(bool modified)
+        {
+            if (!Owner.IsAppending || !Owner.IrefTable.FullyLoaded)
+                return;
+
+            IsModified = modified;
+            if (modified)
+            {
+                Owner.IrefTable.MarkAsModified(Reference ?? ContainingReference);
+            }
+            else
+            {
+                var iref = Reference ?? ContainingReference;
+                if (iref != null)
+                    Owner.IrefTable.ModifiedObjects.Remove(iref.ObjectID);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PdfReference"/> to the object that is the nearest indirect parent of this object<br></br>
+        /// (that is, the object that encapsulates the current object)<br></br>
+        /// This is only meaningful for direct objects embedded in other objects<br></br>
+        /// </summary>
+        internal PdfReference? ContainingReference { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PdfArray"/> class.
@@ -132,7 +161,7 @@ namespace PdfSharp.Pdf
             object ICloneable.Clone()
             {
                 var elements = (ArrayElements)MemberwiseClone();
-                elements._elements = new List<PdfItem>(elements._elements);
+                elements._elements = [..elements._elements];
                 elements._ownerArray = null;
                 return elements;
             }
@@ -169,7 +198,7 @@ namespace PdfSharp.Pdf
             public bool GetBoolean(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 object obj = this[index];
                 //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
@@ -191,7 +220,7 @@ namespace PdfSharp.Pdf
             public int GetInteger(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 object obj = this[index];
                 //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
@@ -213,7 +242,7 @@ namespace PdfSharp.Pdf
             public double GetReal(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 object obj = this[index];
                 //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
@@ -252,7 +281,7 @@ namespace PdfSharp.Pdf
             public double? GetNullableReal(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 object obj = this[index];
                 //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
@@ -278,7 +307,7 @@ namespace PdfSharp.Pdf
             public string GetString(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 object obj = this[index];
                 //object? obj = GetObject(index); // TODO Do this for all conversions! 2023-06-21
@@ -300,7 +329,7 @@ namespace PdfSharp.Pdf
             public string GetName(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 var obj = this[index];
                 if (obj == null!)
@@ -324,7 +353,7 @@ namespace PdfSharp.Pdf
             public PdfObject? GetObject(int index)
             {
                 if (index < 0 || index >= Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.IndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, SyMsgs.IndexOutOfRange3);
 
                 var item = this[index];
                 if (item is PdfReference reference)
@@ -380,6 +409,7 @@ namespace PdfSharp.Pdf
                     if (value == null!)
                         throw new ArgumentNullException(nameof(value));
                     _elements[index] = value;
+                    _ownerArray?.SetModified(true);
                 }
             }
 
@@ -389,6 +419,7 @@ namespace PdfSharp.Pdf
             public void RemoveAt(int index)
             {
                 _elements.RemoveAt(index);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>
@@ -396,7 +427,10 @@ namespace PdfSharp.Pdf
             /// </summary>
             public bool Remove(PdfItem item)
             {
-                return _elements.Remove(item);
+                var removed = _elements.Remove(item);
+                if (removed)
+                    _ownerArray?.SetModified(true);
+                return removed;
             }
 
             /// <summary>
@@ -405,6 +439,7 @@ namespace PdfSharp.Pdf
             public void Insert(int index, PdfItem value)
             {
                 _elements.Insert(index, value);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>
@@ -420,6 +455,8 @@ namespace PdfSharp.Pdf
             /// </summary>
             public void Clear()
             {
+                if (_elements.Count > 0)
+                    _ownerArray?.SetModified(true);
                 _elements.Clear();
             }
 
@@ -444,6 +481,7 @@ namespace PdfSharp.Pdf
                     _elements.Add(obj.Reference!);
                 else
                     _elements.Add(value);
+                _ownerArray?.SetModified(true);
             }
 
             /// <summary>

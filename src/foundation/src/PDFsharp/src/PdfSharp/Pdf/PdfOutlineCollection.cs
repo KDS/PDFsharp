@@ -121,7 +121,7 @@ namespace PdfSharp.Pdf
         /// <param name="textColor">The color used to draw the outline text.</param>
         public PdfOutline Add(string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style, XColor textColor)
         {
-            PdfOutline outline = new PdfOutline(title, destinationPage, opened, style, textColor);
+            PdfOutline outline = new PdfOutline(Owner, title, destinationPage, opened, style, textColor);
             Add(outline);
             return outline;
         }
@@ -135,7 +135,7 @@ namespace PdfSharp.Pdf
         /// <param name="style">The font style used to draw the outline text.</param>
         public PdfOutline Add(string title, PdfPage destinationPage, bool opened, PdfOutlineStyle style)
         {
-            PdfOutline outline = new PdfOutline(title, destinationPage, opened, style);
+            PdfOutline outline = new PdfOutline(Owner, title, destinationPage, opened, style);
             Add(outline);
             return outline;
         }
@@ -148,7 +148,7 @@ namespace PdfSharp.Pdf
         /// <param name="opened">Specifies whether the node is displayed expanded (opened) or collapsed.</param>
         public PdfOutline Add(string title, PdfPage destinationPage, bool opened)
         {
-            PdfOutline outline = new PdfOutline(title, destinationPage, opened);
+            PdfOutline outline = new PdfOutline(Owner, title, destinationPage, opened);
             Add(outline);
             return outline;
         }
@@ -158,7 +158,7 @@ namespace PdfSharp.Pdf
         /// </summary>
         public PdfOutline Add(string title, PdfPage destinationPage)
         {
-            PdfOutline outline = new PdfOutline(title, destinationPage);
+            PdfOutline outline = new PdfOutline(Owner, title, destinationPage);
             Add(outline);
             return outline;
         }
@@ -179,7 +179,7 @@ namespace PdfSharp.Pdf
             if (outline == null)
                 throw new ArgumentNullException(nameof(outline));
             if (index < 0 || index >= _outlines.Count)
-                throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
 
             AddToOutlinesTree(outline);
             _outlines.Insert(index, outline);
@@ -203,15 +203,15 @@ namespace PdfSharp.Pdf
             get
             {
                 if (index < 0 || index >= _outlines.Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
                 return _outlines[index];
             }
             set
             {
                 if (index < 0 || index >= _outlines.Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), index, PSSR.OutlineIndexOutOfRange);
+                    throw new ArgumentOutOfRangeException(nameof(index), index, PsMsgs.OutlineIndexOutOfRange);
                 if (value == null)
-                    throw new ArgumentOutOfRangeException(nameof(value), null, PSSR.SetValueMustNotBeNull);
+                    throw new ArgumentOutOfRangeException(nameof(value), null, PsMsgs.SetValueMustNotBeNull);
 
                 AddToOutlinesTree(value);
                 _outlines[index] = value;

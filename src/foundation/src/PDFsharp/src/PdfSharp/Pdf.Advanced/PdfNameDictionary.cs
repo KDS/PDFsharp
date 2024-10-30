@@ -23,7 +23,7 @@ namespace PdfSharp.Pdf.Advanced
         {
             if (_dests == null)
             {
-                _dests = new PdfNameTreeNode(true);
+                _dests = new PdfNameTreeNode(Owner, true);
                 Owner.Internals.AddObject(_dests);
                 Elements.SetReference(Keys.Dests, _dests.Reference);
             }
@@ -55,7 +55,7 @@ namespace PdfSharp.Pdf.Advanced
         {
             if (_embeddedFiles == null)
             {
-                _embeddedFiles = new PdfNameTreeNode(true);
+                _embeddedFiles = new PdfNameTreeNode(Owner, true);
                 Owner.Internals.AddObject(_embeddedFiles);
                 Elements.SetReference(Keys.EmbeddedFiles, _embeddedFiles.Reference);
             }
