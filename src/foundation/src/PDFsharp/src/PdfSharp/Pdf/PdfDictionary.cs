@@ -21,7 +21,7 @@ namespace PdfSharp.Pdf
     // ReSharper restore InconsistentNaming
     {
         /// <summary>
-        /// Don't create the value.
+        /// Don’t create the value.
         /// </summary>
         None,
 
@@ -45,6 +45,40 @@ namespace PdfSharp.Pdf
         // Reference: 3.2.6  Dictionary Objects / Page 59
 
         /// <summary>
+        /// Gets a value that determines whether the object was modified after loading.
+        /// </summary>
+        internal bool IsModified { get; private set; }
+
+        /// <summary>
+        /// Sets the modified-status of this object
+        /// </summary>
+        /// <param name="modified"></param>
+        internal void SetModified(bool modified)
+        {
+            if (!Owner.IsAppending || !Owner.IrefTable.FullyLoaded)
+                return;
+
+            IsModified = modified;
+            if (modified)
+            {
+                Owner.IrefTable.MarkAsModified(Reference ?? ContainingReference);
+            }
+            else
+            {
+                var iref = Reference ?? ContainingReference;
+                if (iref != null)
+                    Owner.IrefTable.ModifiedObjects.Remove(iref.ObjectID);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PdfReference"/> to the object that is the nearest indirect parent of this object<br></br>
+        /// (that is, the object that encapsulates the current object)<br></br>
+        /// This is only meaningful for direct objects embedded in other objects<br></br>
+        /// </summary>
+        internal PdfReference? ContainingReference { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PdfDictionary"/> class.
         /// </summary>
         public PdfDictionary()
@@ -66,7 +100,7 @@ namespace PdfSharp.Pdf
         {
             if (dict._elements != null)
                 dict._elements.ChangeOwner(this);
-            if (dict.Stream != null)
+            if (dict.Stream != null!)
                 dict.Stream.ChangeOwner(this);
         }
 
@@ -160,12 +194,12 @@ namespace PdfSharp.Pdf
                 Debug.Assert(Elements.ContainsKey("/Length"), "Dictionary has a stream but no length is set.");
 #endif
 
-            if (_stream is not null && writer.SecurityHandler != null)
+            if (_stream is not null && writer.EffectiveSecurityHandler != null)
             {
                 // Encryption could change the size of the stream.
                 // Encrypt the bytes before writing the dictionary to get and update the actual size.
                 var bytes = (byte[])_stream.Value.Clone();
-                writer.SecurityHandler.EncryptStream(ref bytes, this);
+                writer.EffectiveSecurityHandler.EncryptStream(ref bytes, this);
                 _stream.Value = bytes;
                 Elements[PdfStream.Keys.Length] = new PdfInteger(_stream?.Length ?? 0);
             }
@@ -508,7 +542,7 @@ namespace PdfSharp.Pdf
                 {
                     //if (create)
                     //  this[key] = new Pdf();
-                    return String.Empty;
+                    return "";
                 }
 
                 if (obj is PdfReference reference)
@@ -524,7 +558,7 @@ namespace PdfSharp.Pdf
 
             /// <summary>
             /// Sets the specified name value.
-            /// If the value doesn't start with a slash, it is added automatically.
+            /// If the value doesn’t start with a slash, it is added automatically.
             /// </summary>
             public void SetName(string key, string value)
             {
@@ -542,7 +576,7 @@ namespace PdfSharp.Pdf
             /// If the value does not exist, the function returns an empty rectangle.
             /// If the value is not convertible, the function throws an InvalidCastException.
             /// </summary>
-            public PdfRectangle GetRectangle(string key, bool create)
+            public PdfRectangle GetRectangle(string key, bool create = false)
             {
                 var value = new PdfRectangle();
                 var obj = this[key];
@@ -559,20 +593,13 @@ namespace PdfSharp.Pdf
                 {
                     value = new PdfRectangle(array.Elements.GetReal(0), array.Elements.GetReal(1),
                       array.Elements.GetReal(2), array.Elements.GetReal(3));
-                    this[key] = value;
+                    // ignore modification as we're just changing the type
+                    Owner.Owner.IrefTable.IgnoreModify(() => this[key] = value);
                 }
                 else
                     value = (PdfRectangle)obj;
                 return value;
             }
-
-            /// <summary>
-            /// Converts the specified value to PdfRectangle.
-            /// If the value does not exist, the function returns an empty rectangle.
-            /// If the value is not convertible, the function throws an InvalidCastException.
-            /// </summary>
-            public PdfRectangle GetRectangle(string key)
-                => GetRectangle(key, false);
 
             /// <summary>
             /// Sets the entry to a direct rectangle value, represented by an array with four values.
@@ -684,7 +711,7 @@ namespace PdfSharp.Pdf
                     return (int)defaultValue;
                 }
                 //Debug.Assert(obj is Enum);  // BUG This always fails.
-                return (int)Enum.Parse(defaultValue.GetType(), obj.ToString()?[1..] ?? "", false);
+                return (int)Enum.Parse(defaultValue.GetType(), obj.ToString()?.Substring(1) ?? "", false);
             }
 
             internal int GetEnumFromName(string key, object defaultValue)
@@ -835,10 +862,10 @@ namespace PdfSharp.Pdf
                     if (kd != null)
                         type = kd.GetValueType();
                     //else
-                    //    Debug.WriteLine("Warning: Key not descriptor table: " + key);  // TODO: check what this means...
+                    //  Deb/ug.WriteLine("Warning: Key not descriptor table: " + key);  // TODO: check what this means...
                 }
                 //else
-                //    Debug.WriteLine("Warning: No meta provided for type: " + _owner.GetType().Name);  // TODO: check what this means...
+                //  Deb/ug.WriteLine("Warning: No meta provided for type: " + _owner.GetType().Name);  // TODO: check what this means...
                 return type;
             }
 
@@ -864,6 +891,8 @@ namespace PdfSharp.Pdf
                     Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
                     //array = ctorInfo.Invoke(new object[] { oldArray }) as PdfArray;
                     array = ctorInfo.Invoke(new object[] { oldArray }) as PdfArray;
+                    if (array != null && oldArray.ContainingReference != null)
+                        array.ContainingReference = oldArray.ContainingReference;
                 }
                 return array ?? NRT.ThrowOnNull<PdfArray>();
 #else
@@ -925,6 +954,8 @@ namespace PdfSharp.Pdf
                       null, new[] { typeof(PdfDictionary) }, null);
                     Debug.Assert(ctorInfo != null, "No appropriate constructor found for type: " + type.Name);
                     dict = ctorInfo.Invoke(new object[] { oldDictionary }) as PdfDictionary;
+                    if (dict != null && oldDictionary.ContainingReference != null)
+                        dict.ContainingReference = oldDictionary.ContainingReference;
                 }
                 return dict ?? NRT.ThrowOnNull<PdfDictionary>();
 #else
@@ -1010,7 +1041,7 @@ namespace PdfSharp.Pdf
             }
 
             /// <summary>
-            /// Sets the entry with the specified value. DON'T USE THIS FUNCTION - IT MAY BE REMOVED.
+            /// Sets the entry with the specified value. DON’T USE THIS FUNCTION - IT MAY BE REMOVED.
             /// </summary>
             public void SetValue(string key, PdfItem value)
             {
@@ -1021,7 +1052,7 @@ namespace PdfSharp.Pdf
                 // HACK?
                 _elements[key] = value;
             }
-            
+
             /// <summary>
             /// Gets the PdfObject with the specified key, or null if no such object exists. If the key refers to
             /// a reference, the referenced PdfObject is returned.
@@ -1127,7 +1158,7 @@ namespace PdfSharp.Pdf
                         throw new ArgumentNullException(nameof(value));
 #if DEBUG_
                     if (key == "/MediaBox")
-                        key.GetType();
+                        _ = typeof(int);
 
                     //if (value is PdfObject)
                     //{
@@ -1145,6 +1176,7 @@ namespace PdfSharp.Pdf
                     if (value is PdfObject { IsIndirect: true } obj)
                         value = obj.Reference;
                     _elements[key] = value;
+                    _ownerDictionary.SetModified(true);
                 }
             }
 
@@ -1171,6 +1203,7 @@ namespace PdfSharp.Pdf
                     if (value is PdfObject { IsIndirect: true } obj)
                         value = obj.Reference;
                     _elements[key.Value] = value;
+                    _ownerDictionary.SetModified(true);
                 }
             }
 
@@ -1179,7 +1212,10 @@ namespace PdfSharp.Pdf
             /// </summary>
             public bool Remove(string key)
             {
-                return _elements.Remove(key);
+                var removed = _elements.Remove(key);
+                if (removed)
+                    _ownerDictionary.SetModified(true);
+                return removed;
             }
 
             /// <summary>
@@ -1220,6 +1256,8 @@ namespace PdfSharp.Pdf
             /// </summary>
             public void Clear()
             {
+                if (_elements.Count > 0)
+                    _ownerDictionary.SetModified(true);
                 _elements.Clear();
             }
 
@@ -1239,6 +1277,7 @@ namespace PdfSharp.Pdf
                     value = obj.Reference;
 
                 _elements.Add(key, value);
+                _ownerDictionary.SetModified(true);
             }
 
             /// <summary>
@@ -1345,7 +1384,7 @@ namespace PdfSharp.Pdf
             /// Access a key that may contain an array or a single item for working with its value(s).
             /// </summary>
             public ArrayOrSingleItemHelper ArrayOrSingleItem => new(this); // TODO PDFsharp6: Naming.
-            
+
             /// <summary>
             /// Gets the DebuggerDisplayAttribute text.
             /// </summary>
@@ -1432,6 +1471,7 @@ namespace PdfSharp.Pdf
 
                 // Set owners stream to this.
                 _ownerDictionary.Stream = this;
+                //_ownerDictionary.SetModified(true);   // needed ?
             }
 
             /// <summary>
@@ -1665,20 +1705,7 @@ namespace PdfSharp.Pdf
         /// Gets the DebuggerDisplayAttribute text.
         /// </summary>
         // ReSharper disable UnusedMember.Local
-        string DebuggerDisplay
+        string DebuggerDisplay => Invariant($"dictionary({ObjectID.DebuggerDisplay},[{Elements.Count}])={_elements?.DebuggerDisplay}");
         // ReSharper restore UnusedMember.Local
-        {
-            get
-            {
-#if true
-                return String.Format(CultureInfo.InvariantCulture, "dictionary({0},[{1}])={2}",
-                    ObjectID.DebuggerDisplay,
-                    Elements.Count,
-                    _elements?.DebuggerDisplay);
-#else
-                return String.Format(CultureInfo.InvariantCulture, "dictionary({0},[{1}])=", ObjectID.DebuggerDisplay, _elements.DebuggerDisplay);
-#endif
-            }
-        }
     }
 }

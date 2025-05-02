@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+﻿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 namespace PdfSharp.Pdf.AcroForms
@@ -40,6 +40,34 @@ namespace PdfSharp.Pdf.AcroForms
         PdfAcroField.PdfAcroFieldCollection? _fields;
 
         /// <summary>
+        /// Gets the flattened field-hierarchy of this AcroForm
+        /// </summary>
+        public IEnumerable<PdfAcroField> GetAllFields()
+        {
+            var fields = new List<PdfAcroField>();
+            if (Fields != null)
+            {
+                for (var i = 0; i < Fields.Elements.Count; i++)
+                {
+                    var field = Fields[i];
+                    TraverseFields(field, ref fields);
+                }
+            }
+            return fields;
+        }
+
+        private static void TraverseFields(PdfAcroField parentField, ref List<PdfAcroField> fieldList)
+        {
+            fieldList.Add(parentField);
+            for (var i = 0; i < parentField.Fields.Elements.Count; i++)
+            {
+                var field = parentField.Fields[i];
+                if (!string.IsNullOrEmpty(field.Name))
+                    TraverseFields(field, ref fieldList);
+            }
+        }
+
+        /// <summary>
         /// Predefined keys of this dictionary. 
         /// The description comes from PDF 1.4 Reference.
         /// </summary>
@@ -48,7 +76,7 @@ namespace PdfSharp.Pdf.AcroForms
             // ReSharper disable InconsistentNaming
 
             /// <summary>
-            /// (Required) An array of references to the document�s root fields (those with
+            /// (Required) An array of references to the document’s root fields (those with
             /// no ancestors in the field hierarchy).
             /// </summary>
             [KeyInfo(KeyType.Array | KeyType.Required, typeof(PdfAcroField.PdfAcroFieldCollection))]

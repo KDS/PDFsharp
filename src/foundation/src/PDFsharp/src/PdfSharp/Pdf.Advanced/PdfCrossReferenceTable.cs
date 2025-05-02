@@ -10,7 +10,7 @@ namespace PdfSharp.Pdf.Advanced
     /// Represents the cross-reference table of a PDF document. 
     /// It contains all indirect objects of a document.
     /// </summary>
-    sealed class PdfCrossReferenceTable  // Must not be derive from PdfObject.
+    sealed class PdfCrossReferenceTable  // Must not be derived from PdfObject.
     {
         public PdfCrossReferenceTable(PdfDocument document)
         {
@@ -21,12 +21,60 @@ namespace PdfSharp.Pdf.Advanced
         /// <summary>
         /// Represents the relation between PdfObjectID and PdfReference for a PdfDocument.
         /// </summary>
-        public Dictionary<PdfObjectID, PdfReference> ObjectTable = new Dictionary<PdfObjectID, PdfReference>();
+        public Dictionary<PdfObjectID, PdfReference> ObjectTable = [];
 
+        /// <summary>
+        /// Used to collect modified objects for incremental updates
+        /// </summary>
+        public Dictionary<PdfObjectID, PdfReference> ModifiedObjects = [];
+
+        /// Gets or sets a value indicating whether this table is under construction.
+        /// It is true while reading a PDF file.
+        /// </summary>
         internal bool IsUnderConstruction { get; set; }
 
         /// <summary>
-        /// Adds a cross reference entry to the table. Used when parsing the trailer.
+        /// Gets a value that indicates whether this table is fully loaded (true) on in the process of being loaded (false)
+        /// </summary>
+        internal bool FullyLoaded { get; private set; }
+
+        internal void MarkFullyLoaded()
+        {
+            FullyLoaded = true;
+        }
+
+        internal void MarkAsModified(PdfReference? pdfReference)
+        {
+            if (pdfReference == null || !FullyLoaded)
+                return;
+
+            if (pdfReference.ObjectID.IsEmpty)
+                throw new ArgumentException("ObjectID must not be empty", nameof(pdfReference.ObjectID));
+
+            ModifiedObjects[pdfReference.ObjectID] = pdfReference;
+        }
+
+        /// <summary>
+        /// Used to temporarily ignore modifications to objects<br></br>
+        /// (i.e. when doing type-transformations that do not change the structure of the document)
+        /// </summary>
+        /// <param name="action"></param>
+        internal void IgnoreModify(Action action)
+        {
+            var prev = FullyLoaded;
+            FullyLoaded = false;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                FullyLoaded = prev;
+            }
+        }
+
+        /// <summary>
+        /// Adds a cross-reference entry to the table. Used when parsing the trailer.
         /// </summary>
         public void Add(PdfReference iref)
         {
@@ -37,10 +85,15 @@ namespace PdfSharp.Pdf.Advanced
             if (iref.ObjectID.IsEmpty)
                 iref.ObjectID = new PdfObjectID(GetNewObjectNumber());
 
+            // ReSharper disable once CanSimplifyDictionaryLookupWithTryAdd because it would not build with .NET framework
             if (ObjectTable.ContainsKey(iref.ObjectID))
                 throw new InvalidOperationException("Object already in table.");
 
             ObjectTable.Add(iref.ObjectID, iref);
+
+            // new objects must be treated like modified objects
+            if (FullyLoaded && _document.IsAppending)
+                ModifiedObjects[iref.ObjectID] = iref;
         }
 
         /// <summary>
@@ -60,6 +113,24 @@ namespace PdfSharp.Pdf.Advanced
                 throw new InvalidOperationException("Object already in table.");
 
             ObjectTable.Add(value.ObjectID, value.ReferenceNotNull);
+
+            // new objects must be treated like modified objects
+            if (FullyLoaded && _document.IsAppending)
+                ModifiedObjects[value.ObjectID] = value.ReferenceNotNull;
+        }
+
+        /// <summary>
+        /// Adds a PdfObject to the table if it was not already in.
+        /// Returns true if it was added, false otherwise.
+        /// </summary>
+        public bool TryAdd(PdfObject value)
+        {
+            if (value.ObjectID.IsEmpty || !ObjectTable.ContainsKey(value.ObjectID))
+            {
+                Add(value);
+                return true;
+            }
+            return false;
         }
 
         public void Remove(PdfReference iref)
@@ -68,7 +139,7 @@ namespace PdfSharp.Pdf.Advanced
         }
 
         /// <summary>
-        /// Gets a cross reference entry from an object identifier.
+        /// Gets a cross-reference entry from an object identifier.
         /// Returns null if no object with the specified ID exists in the object table.
         /// </summary>
         public PdfReference? this[PdfObjectID objectID]
@@ -113,12 +184,12 @@ namespace PdfSharp.Pdf.Advanced
         }
 
         /// <summary>
-        /// Gets or sets the highest object number used in this docuemnt.
+        /// Gets or sets the highest object number used in this document.
         /// </summary>
         internal int MaxObjectNumber { get; set; }
 
         /// <summary>
-        /// Writes the xref section in pdf stream.
+        /// Writes the xref section in PDF stream.
         /// </summary>
         internal void WriteObject(PdfWriter writer)
         {
@@ -154,7 +225,7 @@ namespace PdfSharp.Pdf.Advanced
         }
 
         /// <summary>
-        /// Gets an array of all cross references in ascending order by their object identifier.
+        /// Gets an array of all cross-references in ascending order by their object identifier.
         /// </summary>
         internal PdfReference[] AllReferences
         {
@@ -273,6 +344,40 @@ namespace PdfSharp.Pdf.Advanced
             }
             MaxObjectNumber = count;
             //CheckConsistence();
+        }
+
+        /// <summary>
+        /// Gets the position of the object immediately behind the specified object, or -1,
+        /// if no such object exists. I.e. -1 means the object is the last one in the PDF file.
+        /// </summary>
+        internal SizeType GetPositionOfObjectBehind(PdfObject obj, SizeType position)
+        {
+            ////var position = obj.Reference?.Position ?? -1;
+            ////if (position == -1)
+            ////{
+            ////    Debug.Assert(false, "Should not happen. Please send us the PDF file if you come here.");
+            ////    return -1;
+            ////}
+#if DEBUG
+            if (obj.Reference == null)
+                _ = typeof(int);
+#endif
+
+            var closestPosition = SizeType.MaxValue;
+            PdfReference? closest = null;
+            foreach (var iref in ObjectTable.Values)
+            {
+                var pos = iref.Position;
+                if (pos < position)
+                    continue;
+                if (pos < closestPosition && iref != obj.Reference)
+                {
+                    closestPosition = pos;
+                    closest = iref;
+                }
+            }
+            // Variable closest can be null if our object is the last one in PDF stream.
+            return closest?.Position ?? -1;
         }
 
         /// <summary>
@@ -420,7 +525,7 @@ namespace PdfSharp.Pdf.Advanced
                 //  GetType();
                 //////Debug.Assert(Object.ReferenceEquals(pdfObject27.Document, _document));
                 //      if (item is PdfObject && ((PdfObject)item).ObjectID.ObjectNumber == 5)
-                //        Debug.WriteLine("items: " + ((PdfObject)item).ObjectID.ToString());
+                //        Deb/ug.WriteLine("items: " + ((PdfObject)item).ObjectID.ToString());
                 //if (pdfObject.ObjectNumber == 5)
                 //  GetType();
 #endif
@@ -444,7 +549,7 @@ namespace PdfSharp.Pdf.Advanced
                             // Is this an indirect reference to an object that does not exist?
                             //if (iref.Document == null)
                             //{
-                            //    Debug.WriteLine("Dead object detected: " + iref.ObjectID.ToString());
+                            //    Deb/ug.WriteLine("Dead object detected: " + iref.ObjectID.ToString());
                             //    PdfReference dead = DeadObject;
                             //    iref.ObjectID = dead.ObjectID;
                             //    iref.Document = _document;
@@ -511,7 +616,7 @@ namespace PdfSharp.Pdf.Advanced
         }
 
         /// <summary>
-        /// Gets the cross reference to an object used for undefined indirect references.
+        /// Gets the cross-reference to an object used for undefined indirect references.
         /// </summary>
         public PdfReference DeadObject
         {
@@ -533,7 +638,7 @@ namespace PdfSharp.Pdf.Advanced
     ///// Represents the cross-reference table of a PDF document. 
     ///// It contains all indirect objects of a document.
     ///// </summary>
-    //internal sealed class PdfCrossReferenceStreamTable  // Must not be derive from PdfObject.
+    //internal sealed class PdfCrossReferenceStreamTable  // Must not be derived from PdfObject.
     //{
     //    public PdfCrossReferenceStreamTable(PdfDocument document)
     //    {

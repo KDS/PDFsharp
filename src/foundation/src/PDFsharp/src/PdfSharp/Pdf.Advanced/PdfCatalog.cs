@@ -1,4 +1,4 @@
-// PDFsharp - A .NET library for processing PDF
+ï»¿// PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
 using PdfSharp.Pdf.IO;
@@ -68,7 +68,7 @@ namespace PdfSharp.Pdf.Advanced
                 if (_pages == null)
                 {
                     _pages = (PdfPages?)Elements.GetValue(Keys.Pages, VCF.CreateIndirect) ?? NRT.ThrowOnNull<PdfPages>();
-                    if (Owner.IsImported)
+                    if (Owner.IsImported && Owner._openMode != PdfDocumentOpenMode.Append)
                         _pages.FlattenPageTree();
                 }
                 return _pages;
@@ -150,15 +150,32 @@ namespace PdfSharp.Pdf.Advanced
         PdfNameDictionary? _names;
 
         /// <summary>
-        /// Gets the AcroForm dictionary of this document.
+        /// Gets or sets the AcroForm dictionary of this document.
         /// </summary>
-        public PdfAcroForm AcroForm
+        public PdfAcroForm? AcroForm
         {
             get
             {
                 if (_acroForm == null)
-                    _acroForm = (PdfAcroForm?)Elements.GetValue(Keys.AcroForm)??NRT.ThrowOnNull<PdfAcroForm>();
+                    _acroForm = (PdfAcroForm?)Elements.GetValue(Keys.AcroForm);
                 return _acroForm;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    if (!value.IsIndirect)
+                        _document.IrefTable.Add(value);
+                    Elements.SetReference(Keys.AcroForm, value);
+                    _acroForm = value;
+                }
+                else
+                {
+                    if (AcroForm != null && AcroForm.Reference != null)
+                        _document.IrefTable.Remove(AcroForm.Reference);
+                    Elements.Remove(Keys.AcroForm);
+                    _acroForm = null;
+                }
             }
         }
         PdfAcroForm? _acroForm;
@@ -227,7 +244,7 @@ namespace PdfSharp.Pdf.Advanced
 
             /// <summary>
             /// (Optional; PDF 1.4) The version of the PDF specification to which the document
-            /// conforms (for example, 1.4) if later than the version specified in the file’s header.
+            /// conforms (for example, 1.4) if later than the version specified in the fileâ€™s header.
             /// If the header specifies a later version, or if this entry is absent, the document 
             /// conforms to the version specified in the header. This entry enables a PDF producer 
             /// application to update the version using an incremental update.
@@ -237,7 +254,7 @@ namespace PdfSharp.Pdf.Advanced
 
             /// <summary>
             /// (Required; must be an indirect reference) The page tree node that is the root of 
-            /// the document’s page tree.
+            /// the documentâ€™s page tree.
             /// </summary>
             [KeyInfo(KeyType.Dictionary | KeyType.Required | KeyType.MustBeIndirect, typeof(PdfPages))]
             public const string Pages = "/Pages";
@@ -252,7 +269,7 @@ namespace PdfSharp.Pdf.Advanced
             public const string PageLabels = "/PageLabels";
 
             /// <summary>
-            /// (Optional; PDF 1.2) The document’s name dictionary.
+            /// (Optional; PDF 1.2) The documentâ€™s name dictionary.
             /// </summary>
             [KeyInfo("1.2", KeyType.Dictionary | KeyType.Optional)]
             public const string Names = "/Names";
@@ -300,14 +317,14 @@ namespace PdfSharp.Pdf.Advanced
 
             /// <summary>
             /// (Optional; must be an indirect reference) The outline dictionary that is the root 
-            /// of the document’s outline hierarchy.
+            /// of the documentâ€™s outline hierarchy.
             /// </summary>
             [KeyInfo(KeyType.Dictionary | KeyType.Optional, typeof(PdfOutline))]
             public const string Outlines = "/Outlines";
 
             /// <summary>
             /// (Optional; PDF 1.1; must be an indirect reference) An array of thread dictionaries 
-            /// representing the document’s article threads.
+            /// representing the documentâ€™s article threads.
             /// </summary>
             [KeyInfo("1.1", KeyType.Array | KeyType.Optional)]
             public const string Threads = "/Threads";
@@ -336,7 +353,7 @@ namespace PdfSharp.Pdf.Advanced
             public const string URI = "/URI";
 
             /// <summary>
-            /// (Optional; PDF 1.2) The document’s interactive form (AcroForm) dictionary.
+            /// (Optional; PDF 1.2) The documentâ€™s interactive form (AcroForm) dictionary.
             /// </summary>
             [KeyInfo("1.2", KeyType.Dictionary | KeyType.Optional, typeof(PdfAcroForm))]
             public const string AcroForm = "/AcroForm";
@@ -349,14 +366,14 @@ namespace PdfSharp.Pdf.Advanced
             public const string Metadata = "/Metadata";
 
             /// <summary>
-            /// (Optional; PDF 1.3) The document’s structure tree root dictionary.
+            /// (Optional; PDF 1.3) The documentâ€™s structure tree root dictionary.
             /// </summary>
             [KeyInfo("1.3", KeyType.Dictionary | KeyType.Optional)]
             public const string StructTreeRoot = "/StructTreeRoot";
 
             /// <summary>
             /// (Optional; PDF 1.4) A mark information dictionary containing information
-            /// about the document’s usage of Tagged PDF conventions.
+            /// about the documentâ€™s usage of Tagged PDF conventions.
             /// </summary>
             [KeyInfo("1.4", KeyType.Dictionary | KeyType.Optional)]
             public const string MarkInfo = "/MarkInfo";
@@ -390,7 +407,7 @@ namespace PdfSharp.Pdf.Advanced
             public const string PieceInfo = "/PieceInfo";
 
             /// <summary>
-            /// (Optional; PDF 1.5; required if a document contains optional content) The document’s 
+            /// (Optional; PDF 1.5; required if a document contains optional content) The documentâ€™s 
             /// optional content properties dictionary.
             /// </summary>
             [KeyInfo("1.5", KeyType.Dictionary | KeyType.Optional)]

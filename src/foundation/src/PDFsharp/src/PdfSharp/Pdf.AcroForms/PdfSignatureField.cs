@@ -1,8 +1,10 @@
 // PDFsharp - A .NET library for processing PDF
 // See the LICENSE file in the solution root for more information.
 
+using PdfSharp.Pdf.IO;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf.Annotations;
+using PdfSharp.Pdf.Signatures;
 
 namespace PdfSharp.Pdf.AcroForms
 {
@@ -16,13 +18,40 @@ namespace PdfSharp.Pdf.AcroForms
         /// </summary>
         internal PdfSignatureField(PdfDocument document)
             : base(document)
-        { }
+        {
+            Elements[PdfAcroField.Keys.FT] = new PdfName("/Sig");
+        }
 
         internal PdfSignatureField(PdfDictionary dict)
             : base(dict)
         { }
 
-        public IAnnotationAppearanceHandler CustomAppearanceHandler { get; internal set; }
+        /// <summary>
+        /// Gets or sets the value for this field
+        /// </summary>
+        public new PdfSignatureValue? Value
+        {
+            get
+            {
+                if (sigValue is null)
+                {
+                    var dict = Elements.GetValue(PdfAcroField.Keys.V) as PdfDictionary;
+                    if (dict is not null)
+                        sigValue = new PdfSignatureValue(dict);
+                }
+                return sigValue;
+            }
+            set
+            {
+                if (value is not null)
+                    Elements.SetReference(PdfAcroField.Keys.V, value);
+                else
+                    Elements.Remove(PdfAcroField.Keys.V);
+            }
+        }
+        PdfSignatureValue? sigValue;
+
+        public IAnnotationAppearanceHandler? CustomAppearanceHandler { get; internal set; }
 
         /// <summary>
         /// Creates the custom appearance form X object for the annotation that represents
@@ -68,8 +97,27 @@ namespace PdfSharp.Pdf.AcroForms
         }
 
         /// <summary>
+        /// Writes a key/value pair of this signature field dictionary.
+        /// </summary>
+        internal override void WriteDictionaryElement(PdfWriter writer, PdfName key)
+        {
+            // Don’t encrypt Contents key’s value (PDF Reference 2.0: 7.6.2, Page 71).
+            if (key.Value == Keys.Contents)
+            {
+                var effectiveSecurityHandler = writer.EffectiveSecurityHandler;
+                writer.EffectiveSecurityHandler = null;
+                base.WriteDictionaryElement(writer, key);
+                writer.EffectiveSecurityHandler = effectiveSecurityHandler;
+            }
+            else
+                base.WriteDictionaryElement(writer, key);
+        }
+
+        /// <summary>
         /// Predefined keys of this dictionary.
-        /// The description comes from PDF 1.4 Reference.
+        /// The description comes from PDF 1.4 Reference.<br></br>
+        /// TODO: These are wrong !
+        /// The keys are for a <see cref="PdfSignatureValue"/>, not for a <see cref="PdfSignatureField"/>
         /// </summary>
         public new class Keys : PdfAcroField.Keys
         {
@@ -82,7 +130,7 @@ namespace PdfSharp.Pdf.AcroForms
 
             /// <summary>
             /// (Required; inheritable) The name of the signature handler to be used for
-            /// authenticating the field�s contents, such as Adobe.PPKLite, Entrust.PPKEF,
+            /// authenticating the field’s contents, such as Adobe.PPKLite, Entrust.PPKEF,
             /// CICI.SignIt, or VeriSign.PPKVS.
             /// </summary>
             [KeyInfo(KeyType.Name | KeyType.Required)]
@@ -130,7 +178,7 @@ namespace PdfSharp.Pdf.AcroForms
             public const string Location = "/Location";
 
             /// <summary>
-            /// (Optional) The reason for the signing, such as (I agree�).
+            /// (Optional) The reason for the signing, such as (I agree…).
             /// </summary>
             [KeyInfo(KeyType.TextString | KeyType.Optional)]
             public const string Reason = "/Reason";
