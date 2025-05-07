@@ -43,7 +43,7 @@ namespace PdfSharp.Pdf.Signatures
             inputStream = documentStream;
             // apply signature as an incremental update
             document = PdfReader.Open(documentStream, PdfDocumentOpenMode.Append);
-            signer = new DefaultSigner(signatureOptions);
+            signer = signatureOptions.Signer ?? new DefaultSigner(signatureOptions);
         }
 
         /// <summary>
@@ -204,8 +204,8 @@ namespace PdfSharp.Pdf.Signatures
 
         private void RenderSignatureAppearance(PdfSignatureField signatureField)
         {
-            if (string.IsNullOrEmpty(options.Signer))
-                options.Signer = signer.GetName() ?? "unknown";
+            if (string.IsNullOrEmpty(options.SignerName))
+                options.SignerName = signer.GetName() ?? "unknown";
 
             XRect annotRect;
             var rect = signatureField.Elements.GetRectangle(PdfAnnotation.Keys.Rect);

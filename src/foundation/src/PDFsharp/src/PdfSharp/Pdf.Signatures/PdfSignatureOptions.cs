@@ -19,7 +19,7 @@ namespace PdfSharp.Pdf.Signatures
         /// The name of the signer.<br></br>
         /// If not set, defaults to the Subject of the provided Certificate
         /// </summary>
-        public string? Signer { get; set; }
+        public string? SignerName { get; set; }
 
         /// <summary>
         /// Contact info for the signer
@@ -71,5 +71,11 @@ namespace PdfSharp.Pdf.Signatures
         /// A custom appearance renderer for the signature
         /// </summary>
         public ISignatureRenderer? Renderer { get; set; }
+
+        /// <summary>
+        /// The signer.<br></br>
+        /// If not set, defaults to the DefaultSigner
+        /// </summary>
+        public ISigner? Signer { get; set; }
     }
 }

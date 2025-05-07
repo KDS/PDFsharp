@@ -20,9 +20,9 @@ namespace PdfSharp.Pdf.Signatures
             }
 
             var sb = new StringBuilder();
-            if (options.Signer != null)
+            if (options.SignerName != null)
             {
-                sb.AppendFormat("Signed by {0}\n", options.Signer);
+                sb.AppendFormat("Signed by {0}\n", options.SignerName);
             }
             if (options.Location != null)
             {
