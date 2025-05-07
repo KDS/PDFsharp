@@ -85,5 +85,15 @@ namespace PdfSharp.Pdf.Signatures
                 _ => throw new NotImplementedException(),
             };
         }
+
+        public Byte[] GetSignedCms(Stream documentStream, PdfDocument document)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Byte[] GetSignedCms(Byte[] range, PdfDocument document)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
