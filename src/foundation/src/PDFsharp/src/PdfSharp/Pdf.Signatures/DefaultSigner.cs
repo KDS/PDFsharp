@@ -5,10 +5,13 @@
 using System.IO;
 #endif
 #if NET6_0_OR_GREATER
+using System.Formats.Asn1;
 using System.Net.Http.Headers;
-    #if WPF
+#if WPF
     using System.Net.Http;
-    #endif
+#endif
+#else
+using Org.BouncyCastle.Asn1;
 #endif
 using System.Security.Cryptography;
 using System.Security.Cryptography.Pkcs;
@@ -43,16 +46,36 @@ namespace PdfSharp.Pdf.Signatures
 
         public byte[] GetSignedCms(byte[] range, PdfDocument document)
         {
+            var cert = options.Certificate!;
+
             // Sign the byte range
             var contentInfo = new ContentInfo(range);
             var signedCms = new SignedCms(contentInfo, true);
-            var signer = new CmsSigner(options.Certificate)/* { IncludeOption = X509IncludeOption.WholeChain }*/;
-            signer.UnsignedAttributes.Add(new Pkcs9SigningTime());
+            var signer = new CmsSigner(cert)
+            {
+                DigestAlgorithm = new Oid("2.16.840.1.101.3.4.2.1"),
+                IncludeOption = X509IncludeOption.WholeChain,
+            };
+
+            foreach (var attr in signer.SignedAttributes)
+            {
+                signer.SignedAttributes.Remove(attr);
+            }
+
+            signer.SignedAttributes.Add(new Pkcs9SigningTime());
+
+            var signingCert = SigningCertV2(cert.RawData);
+            if (signingCert != null)
+            {
+                signer.SignedAttributes.Add(signingCert);
+            }
 
             signedCms.ComputeSignature(signer, true);
 
             if (options.TimestampAuthorityUri is not null)
+            {
                 Task.Run(() => AddTimestampFromTSAAsync(signedCms)).Wait();
+            }
 
             var bytes = signedCms.Encode();
 
@@ -104,6 +127,74 @@ namespace PdfSharp.Pdf.Signatures
 
             // The RFC3161 sign certificate is separate to the contents that was signed, we need to add it to the unsigned attributes.
             newSignerInfo.AddUnsignedAttribute(new AsnEncodedData(SignatureTimeStampOin, timestampToken.AsSignedCms().Encode()));
+#endif
+        }
+
+        private AsnEncodedData? SigningCertV2(byte[] certRawData)
+        {
+            byte[] certHash;
+            using (var sha256 = SHA256.Create())
+            {
+                certHash = sha256.ComputeHash(certRawData);
+            }
+
+#if NET6_0_OR_GREATER
+            var writer = new AsnWriter(AsnEncodingRules.DER);
+            writer.PushSequence(); // SigningCertificateV2 SEQUENCE
+            writer.PushSequence(); // certs SEQUENCE
+
+            writer.PushSequence(); // ESSCertIDv2
+
+            // Hash algorithm identifier (SHA-256)
+            writer.PushSequence();
+            writer.WriteObjectIdentifier("2.16.840.1.101.3.4.2.1"); // SHA-256
+            writer.PopSequence();
+
+            // certHash (OCTET STRING)
+            writer.WriteOctetString(certHash);
+
+            writer.PopSequence(); // End of ESSCertIDv2
+
+            writer.PopSequence(); // End of certs
+            writer.PopSequence(); // End of SigningCertificateV2
+
+            var essAttr = new AsnEncodedData(
+                new Oid("1.2.840.113549.1.9.16.2.47"), // SigningCertificateV2
+                writer.Encode());
+
+            return essAttr;
+#else
+            // SHA-256 OID
+            DerObjectIdentifier sha256Oid = new DerObjectIdentifier("2.16.840.1.101.3.4.2.1");
+
+            // Build AlgorithmIdentifier sequence (hash algorithm)
+            Asn1EncodableVector hashAlgVector = new Asn1EncodableVector();
+            hashAlgVector.Add(sha256Oid);
+            hashAlgVector.Add(DerNull.Instance);
+            DerSequence hashAlgSeq = new DerSequence(hashAlgVector);
+
+            // Build ESSCertIDv2 sequence
+            Asn1EncodableVector essCertVector = new Asn1EncodableVector();
+            essCertVector.Add(hashAlgSeq);
+            essCertVector.Add(new DerOctetString(certHash));
+            DerSequence essCertSeq = new DerSequence(essCertVector);
+
+            // certs SEQUENCE (of ESSCertIDv2)
+            Asn1EncodableVector certsVector = new Asn1EncodableVector();
+            certsVector.Add(essCertSeq);
+            DerSequence certsSeq = new DerSequence(certsVector);
+
+            // SigningCertificateV2 SEQUENCE
+            Asn1EncodableVector signingCertV2Vector = new Asn1EncodableVector();
+            signingCertV2Vector.Add(certsSeq);
+            DerSequence signingCertV2 = new DerSequence(signingCertV2Vector);
+
+            // Wrap in AsnEncodedData (to match return type)
+            var essAttr = new AsnEncodedData(
+                new Oid("1.2.840.113549.1.9.16.2.47"),
+                signingCertV2.GetDerEncoded());
+
+            return essAttr;
 #endif
         }
     }
