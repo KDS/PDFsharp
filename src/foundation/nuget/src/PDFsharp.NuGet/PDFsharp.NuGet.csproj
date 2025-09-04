@@ -13,10 +13,10 @@
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NuspecFile>$(MSBuildThisFileDirectory)$(MSBuildProjectName).nuspec</NuspecFile>
-    <NuGetId>PDFsharp</NuGetId>
-    <NuGetTitle>PDFsharp for Windows and Linux</NuGetTitle>
+    <NuGetId>PDFsharp-extended</NuGetId>
+    <NuGetTitle>PDFsharp for Windows and Linux, with extra features: file attachment annotations, embedded file checksum, preservation of XMP data, and bug fixes.</NuGetTitle>
     <NuGetDescription Condition=" '$(Configuration)'=='Debug' ">$(DebugBuildMessage)%0D$(NuGetDescription)</NuGetDescription>
-    <NuGetSummary>A .NET library for processing PDF.</NuGetSummary>
+    <NuGetSummary>A .NET library for processing PDF. With extra features: file attachment annotations, embedded file checksum, preservation of XMP data, and bug fixes.</NuGetSummary>
     <NuGetTags>$(NuGetTags_PdfSharp)</NuGetTags>
   </PropertyGroup>
 
