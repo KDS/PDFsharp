@@ -267,8 +267,9 @@ namespace MigraDoc.Tests.Fonts
             // Check font of the error message.
             var fontName = PdfFileHelper.GetCurrentFontName(0, pdfDocument, streamEnumerator =>
             {
-                // Move to "Image '???' not found.".
-                streamEnumerator.Text.MoveAndGetNext(x => x.Text == "Image '???' not found.", true, out _).Should().BeTrue();
+                // Move to "Image '<filename>' not found.".
+                // Move to "Image 'c:/not-existing-image' not found.".
+                streamEnumerator.Text.MoveAndGetNext(x => x.Text == "Image 'c:/not-existing-image' not found.", true, out _).Should().BeTrue();
             });
             fontName.ToLower().Should().Be(expectedFontName.ToLower());
         }
@@ -340,7 +341,7 @@ namespace MigraDoc.Tests.Fonts
             var section = document.AddSection();
 
             // Add a not existing image to force error message.
-            section.AddImage("not-existing-image");
+            section.AddImage("c:/not-existing-image");
 
             return document;
         }

@@ -23,8 +23,11 @@ namespace MigraDoc.Rendering
         /// </summary>
         internal static XFont FontToXFont(Font font)
         {
-            if (_lastXFont != null && font == _lastFont)
-                return _lastXFont;
+            // Check if both WeakReferences are still valid and point to the font we need.
+            if (_lastXFont != null && _lastFont != null &&
+                _lastFont.TryGetTarget(out var lastFont) && font == lastFont &&
+                _lastXFont.TryGetTarget(out var lastXFont))
+                return lastXFont;
 
             XFontStyleEx style = GetXStyle(font);
 
@@ -37,13 +40,19 @@ namespace MigraDoc.Rendering
 #if DEBUG_
             CreateFontCounter++;
 #endif
-            _lastFont = font;
-            _lastXFont = xFont;
+            _lastFont = new(font);
+            _lastXFont = new(xFont);
+#if FORCE_MEMORYLEAK
+            _lastFont2 = font;
+#endif
             return xFont;
         }
 
-        static XFont? _lastXFont;
-        static Font? _lastFont;
+        static WeakReference<XFont>? _lastXFont;
+        static WeakReference<Font>? _lastFont;
+#if FORCE_MEMORYLEAK
+        static Font? _lastFont2;
+#endif
 
         internal static XFontStyleEx GetXStyle(Font font)
         {

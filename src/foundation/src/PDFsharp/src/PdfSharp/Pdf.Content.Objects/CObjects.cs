@@ -102,6 +102,12 @@ namespace PdfSharp.Pdf.Content.Objects  // TODO_OLD: split into single files
         /// <param name="sequence">The sequence.</param>
         public void Add(CSequence sequence)
         {
+            if (sequence is CArray array)
+            {
+                _items.Add(array);
+                return;
+            }
+
             int count = sequence.Count;
             for (int idx = 0; idx < count; idx++)
                 _items.Add(sequence[idx]);
@@ -205,7 +211,12 @@ namespace PdfSharp.Pdf.Content.Objects  // TODO_OLD: split into single files
             var s = new StringBuilder();
 
             for (int idx = 0; idx < _items.Count; idx++)
+            {
+                // Add spaces except for first item.
+                if (s.Length > 0)
+                    s.Append(' ');
                 s.Append(_items[idx]);
+            }
 
             return s.ToString();
         }

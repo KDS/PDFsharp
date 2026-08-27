@@ -276,6 +276,9 @@ namespace PdfSharp.Pdf.Filters
             }
 #endif
 
+            if (decodeParms is not null)
+                PdfReference.Dereference(ref decodeParms);
+
             if (filterItem is PdfName && decodeParms is null or PdfDictionary)
             {
                 var filter = GetFilter(filterItem.ToString()!);

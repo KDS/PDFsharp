@@ -303,8 +303,12 @@ namespace PdfSharp.Drawing.Internal
                 if (headerType == 0xd9)
                     return false;
 
-                // Check for standalone markers.
-                if (headerType == 0x01 || headerType >= 0xd0 && headerType <= 0xd7)
+                // 0xff followed by 0x00 is not a valid JPEG tag. Skip this entry.
+                // If the value 0xFF is ever needed in a JPEG file, it must be escaped by immediately
+                // following it with 0x00. This is called "byte stuffing".
+                // Source: https://www.ccoderun.ca/programming/2017-01-31_jpeg/
+                // Check for standalone markers 0x01 and 0xd0 through 0xd7.
+                if (headerType is 0x00 or 0x01 or >= 0xd0 and <= 0xd7)
                 {
                     stream.CurrentOffset += 2;
                     return true;

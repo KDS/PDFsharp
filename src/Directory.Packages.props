@@ -1,6 +1,7 @@
 <Project>
   <!--<Import Condition="Exists('Local.Packages.props')" Project="$([MSBuild]::GetPathOfFileAbove('Local.Packages.props', '$(MSBuildThisFileDirectory)'))" />-->
   <PropertyGroup>
+    <Logging_Abstractions_PackageVersion>8.0.3</Logging_Abstractions_PackageVersion>
     <Logging_PackageVersion>8.0.1</Logging_PackageVersion>
     <Cryptography_PackageVersion>8.0.1</Cryptography_PackageVersion>
   </PropertyGroup>
@@ -8,8 +9,9 @@
   <ItemGroup>
 
     <!-- Logging packages used by all PDFsharp projects -->
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="$(Logging_PackageVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(Logging_PackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(Logging_Abstractions_PackageVersion)" />
+    <!-- Logging packages only used by PDFsharp sample projects and tests -->
+    <!--<PackageVersion Include="Microsoft.Extensions.Logging" Version="$(Logging_PackageVersion)" />-->
     <PackageVersion Include="Microsoft.Extensions.Logging.Configuration" Version="$(Logging_PackageVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(Logging_PackageVersion)" />
 

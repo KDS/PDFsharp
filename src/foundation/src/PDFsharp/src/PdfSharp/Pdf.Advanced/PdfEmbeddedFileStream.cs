@@ -18,7 +18,7 @@ namespace PdfSharp.Pdf.Advanced
             _data = new byte[stream.Length];
             using (stream)
             {
-                stream.Read(_data, 0, (int)stream.Length);
+                _ = stream.Read(_data, 0, (int)stream.Length);
             }
             _checksum = checksum;
 

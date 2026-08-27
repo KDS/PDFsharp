@@ -43,7 +43,7 @@
       <NuspecProperties>$(NuspecProperties);tags=$(NuGetTags)</NuspecProperties>
 
       <NuspecProperties>$(NuspecProperties);NetCore_PackageVersion=$(NetCore_PackageVersion)</NuspecProperties>
-      <NuspecProperties>$(NuspecProperties);Logging_PackageVersion=$(Logging_PackageVersion)</NuspecProperties>
+      <NuspecProperties>$(NuspecProperties);Logging_Abstractions_PackageVersion=$(Logging_Abstractions_PackageVersion)</NuspecProperties>
       <NuspecProperties>$(NuspecProperties);Cryptography_PackageVersion=$(Cryptography_PackageVersion)</NuspecProperties>
   </PropertyGroup>
 

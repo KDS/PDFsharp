@@ -30,13 +30,16 @@ namespace PdfSharp.Pdf.Security.Encryption
         {
             VersionValue = 5; // Always 5 for PdfEncryptionV5.
             RevisionValue = 6; // Always 6 for PdfEncryptionV5.
-            LengthValue = null; // Deprecated in PDF 2.0.
-
-            ActualLength = 256; // Always 256 for PdfEncryptionV5.
+            LengthValue = GetDefaultLength(); // Deprecated in PDF 2.0. But the adobe powered PDF viewer extension for edge cannot open files correctly, if length is missing.
 
             EncryptMetadata = encryptMetadata;
 
             SecurityHandler.GetOrAddStandardCryptFilter().SetEncryptionToAESForV5();
+        }
+
+        int GetDefaultLength()
+        {
+            return 256; // Always 256 for PdfEncryptionV5.
         }
 
         /// <summary>
@@ -48,7 +51,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             Initialize(encryptMetadata);
         }
 
-        static void CheckValues(int? versionValue, int? revisionValue, int? lengthValue)
+        static void CheckValues(int? versionValue, int? revisionValue, int lengthValue)
         {
             if (versionValue is not 5)
                 throw TH.InvalidOperationException_InvalidVersionValueForEncryptionVersion5();
@@ -56,7 +59,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             if (revisionValue is not (5 or 6))
                 throw TH.InvalidOperationException_InvalidRevisionValueForEncryptionVersion5();
 
-            if (lengthValue is not (null or 256))
+            if (lengthValue is not 256)
                 throw TH.InvalidOperationException_InvalidLengthValueForEncryptionVersion5();
         }
 
@@ -179,7 +182,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.V, VersionValue!.Value);
 
             // In PDF reference, Length is marked as deprecated in PDF 2.0, but Adobe Reader cannot read V5 encrypted files if this key is omitted.
-            SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.Length, ActualLength!.Value);
+            SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.Length, LengthValue);
 
             var permissionsValue = SecurityHandler.GetCorrectedPermissionsValue();
             SecurityHandler.Elements.SetInteger(PdfStandardSecurityHandler.Keys.P, (int)permissionsValue);
@@ -521,7 +524,7 @@ namespace PdfSharp.Pdf.Security.Encryption
         {
             VersionValue = SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.V);
             RevisionValue = SecurityHandler.Elements.GetInteger(PdfStandardSecurityHandler.Keys.R);
-            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : null;
+            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : GetDefaultLength();
 
             // Ensure properties are set to the only valid values for PdfEncryptionV5.
             CheckValues(VersionValue, RevisionValue, LengthValue);

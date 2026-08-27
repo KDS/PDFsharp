@@ -21,7 +21,7 @@ namespace PdfSharp.Pdf.Security.Encryption
         /// </summary>
         public void SetEncryptionToV1()
         {
-            Initialize(1);
+            Initialize(1, 40);
             SecurityHandler.RemoveCryptFilters();
             SecurityHandler._document.SetRequiredVersion(12);
         }
@@ -44,8 +44,8 @@ namespace PdfSharp.Pdf.Security.Encryption
         // ReSharper disable once InconsistentNaming
         public void SetEncryptionToV4UsingRC4(bool encryptMetadata = true)
         {
-            Initialize(4, null, encryptMetadata);
-            SecurityHandler.GetOrAddStandardCryptFilter().SetEncryptionToRC4ForV4(ActualLength!.Value);
+            Initialize(4, 128, encryptMetadata);
+            SecurityHandler.GetOrAddStandardCryptFilter().SetEncryptionToRC4ForV4();
             SecurityHandler._document.SetRequiredVersion(15);
         }
 
@@ -55,7 +55,7 @@ namespace PdfSharp.Pdf.Security.Encryption
         /// <param name="encryptMetadata">The document metadata stream shall be encrypted (default: true).</param>
         public void SetEncryptionToV4UsingAES(bool encryptMetadata = true)
         {
-            Initialize(4, null, encryptMetadata);
+            Initialize(4, 128, encryptMetadata);
             SecurityHandler.GetOrAddStandardCryptFilter().SetEncryptionToAESForV4();
             SecurityHandler._document.SetRequiredVersion(16);
         }
@@ -67,9 +67,7 @@ namespace PdfSharp.Pdf.Security.Encryption
         {
             VersionValue = SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.V);
             RevisionValue = SecurityHandler.Elements.GetInteger(PdfStandardSecurityHandler.Keys.R);
-            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : null;
-
-            UpdateActualLength();
+            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : GetDefaultLength();
 
             EncryptMetadata = (SecurityHandler.Elements[PdfStandardSecurityHandler.Keys.EncryptMetadata] as PdfBoolean)?.Value ?? true; // GetBoolean() returns false if not existing, but default is true.
 
@@ -80,7 +78,7 @@ namespace PdfSharp.Pdf.Security.Encryption
                 Debug.Assert(calculatedRevision == RevisionValue);
         }
 
-        void Initialize(int versionValue, int? lengthValue = null, bool encryptMetadata = true)
+        void Initialize(int versionValue, int lengthValue, bool encryptMetadata = true)
         {
             CheckVersionAndLength(versionValue, lengthValue);
 
@@ -88,30 +86,28 @@ namespace PdfSharp.Pdf.Security.Encryption
             RevisionValue = null; // Revision is calculated later in PrepareEncryptionForSaving().
             LengthValue = lengthValue;
 
-            UpdateActualLength();
-
             EncryptMetadata = encryptMetadata;
         }
 
-        void UpdateActualLength()
+        int GetDefaultLength()
         {
-            ActualLength = VersionValue switch
+            return VersionValue switch
             {
-                1 => 40,
-                2 => LengthValue ?? 40, // The default for Length value is 40.
-                4 => 128,
+                1 => 40, // Always 40.
+                2 => 40, // Default value.
+                4 => 128, // Always 128.
                 _ => throw TH.InvalidOperationException_InvalidVersionValueForEncryptionVersion1To4()
             };
         }
 
-        static void CheckVersionAndLength(int? versionValue, int? lengthValue)
+        static void CheckVersionAndLength(int? versionValue, int lengthValue)
         {
             if (!IsVersionSupported(versionValue))
                 throw TH.InvalidOperationException_InvalidVersionValueForEncryptionVersion1To4();
 
             if (versionValue == 2) // Length is only needed for V2.
             {
-                if (lengthValue is null or < 40 or > 128 || lengthValue % 8 > 0)
+                if (lengthValue is < 40 or > 128 || lengthValue % 8 > 0)
                     throw TH.InvalidOperationException_InvalidKeyLengthForEncryptionVersion2();
             }
         }
@@ -135,10 +131,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             CheckVersionAndLength(VersionValue, LengthValue);
 
             SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.V, VersionValue!.Value);
-            if (LengthValue.HasValue)
-                SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.Length, LengthValue.Value);
-            else
-                SecurityHandler.Elements.Remove(PdfSecurityHandler.Keys.Length);
+            SecurityHandler.Elements.SetInteger(PdfSecurityHandler.Keys.Length, LengthValue);
 
             var permissionsValue = SecurityHandler.GetCorrectedPermissionsValue();
             SecurityHandler.Elements.SetInteger(PdfStandardSecurityHandler.Keys.P, (int)permissionsValue);
@@ -242,7 +235,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             if (RevisionValue >= 3)
             {
                 // The encryption key length (in bytes) shall depend on the Length value (in bits).
-                var keyLength = ActualLength!.Value / 8;
+                var keyLength = LengthValue / 8;
 
                 // Hash the pad 50 times
                 for (var idx = 0; idx < 50; idx++)
@@ -308,7 +301,7 @@ namespace PdfSharp.Pdf.Security.Encryption
                     userValue[idx] = 0;
 
                 // Create encryption key with the specified length.
-                var keyLength = ActualLength!.Value / 8;
+                var keyLength = LengthValue / 8;
                 Debug.Assert(keyLength == _globalEncryptionKey.Length);
                 var encryptionKey = new Byte[keyLength];
 
@@ -368,7 +361,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             if (RevisionValue >= 3)
             {
                 // The encryption and MD5 hashing key length (in bytes) shall depend on the Length value (in bits).
-                keyLength = ActualLength!.Value / 8;
+                keyLength = LengthValue / 8;
 
 #if !NET6_0_OR_GREATER
                 // We have to call Initialize here for .NET 4.6.2.
@@ -405,8 +398,7 @@ namespace PdfSharp.Pdf.Security.Encryption
         public override PasswordValidity ValidatePassword(string inputPassword)
         {
             VersionValue = SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.V);
-            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : null;
-            UpdateActualLength();
+            LengthValue = SecurityHandler.Elements.ContainsKey(PdfSecurityHandler.Keys.Length) ? SecurityHandler.Elements.GetInteger(PdfSecurityHandler.Keys.Length) : GetDefaultLength();
             CheckVersionAndLength(VersionValue, LengthValue);
 
             RevisionValue = SecurityHandler.Elements.GetInteger(PdfStandardSecurityHandler.Keys.R);
@@ -447,7 +439,7 @@ namespace PdfSharp.Pdf.Security.Encryption
             if (RevisionValue >= 3)
             {
                 // The encryption key length (in bytes) shall depend on the Length value (in bits).
-                var keyLength = ActualLength!.Value / 8;
+                var keyLength = LengthValue / 8;
 
                 // Hash the pad 50 times.
                 for (var idx = 0; idx < 50; idx++)

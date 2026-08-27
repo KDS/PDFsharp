@@ -86,21 +86,20 @@ namespace MigraDoc.Rendering
                 }
                 catch (Exception)
                 {
-                    RenderFailureImage(destRect);
+                    RenderFailureImage(destRect, formatInfo.ImagePath);
                 }
                 finally
                 {
-                    if (xImage != null)
-                        xImage.Dispose();
+                    xImage?.Dispose();
                 }
             }
             else
-                RenderFailureImage(destRect);
+                RenderFailureImage(destRect, formatInfo.ImagePath);
 
             RenderLine();
         }
 
-        void RenderFailureImage(XRect destRect)
+        void RenderFailureImage(XRect destRect, string? imagePath)
         {
             _gfx.DrawRectangle(XBrushes.LightGray, destRect);
             string failureString;
@@ -113,7 +112,7 @@ namespace MigraDoc.Rendering
                     break;
 
                 case ImageFailure.FileNotFound:
-                    failureString = MdPdfMsgs.DisplayImageFileNotFound("???").Message;
+                    failureString = MdPdfMsgs.DisplayImageFileNotFound(imagePath ?? "Unknown image").Message;
                     break;
 
                 case ImageFailure.InvalidType:
@@ -326,7 +325,7 @@ namespace MigraDoc.Rendering
                 // Same for GDI.
                 // We have to rely on the garbage collector to properly dispose the MemoryStream.
                 {
-                    Stream stream = new MemoryStream(bytes);
+                    Stream stream = new MemoryStream(bytes, 0, bytes.Length, false, true);
                     XImage image = XImage.FromStream(stream);
                     return image;
                 }
