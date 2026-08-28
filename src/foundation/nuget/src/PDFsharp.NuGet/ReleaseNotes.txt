@@ -8,7 +8,8 @@ https://docs.pdfsharp.net/link/readme-v6.2.html
 
 
 PDFsharp-extended:
-
+v1.4.0
+* Synchronized with PdfSharp 6.2.4
 v1.2.0
 * Synchronized with PdfSharp 6.2.1 (including natively multi-targeting netstandard/fx/net6 and digital signatures)
 v1.1.1
